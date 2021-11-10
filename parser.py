@@ -160,6 +160,8 @@ boardsDone = 0
 archivesDone = 0
 threadsDone = 0
 
+aLog("\nRunning at " + str(datetime.now(timezone.utc)) + "\n")
+
 for board in boards:
 	print("Processing " + boards[board]['name'])
 	# Try to set up a folder for the board.
@@ -182,6 +184,16 @@ for board in boards:
 		three = "==="
 
 		# Dumb hack because some old noticeboards used === instead of ==.
+		# What we're looking for:
+		
+		# board	from to
+		#----------------
+		# AN3	1	62
+		# ANI	1	40
+		# AN	2	3
+
+		# COIN also has insanely long heaps of crap around the headlines from archives 1 thru 17, but these don't affect the headings themselves.
+
 		if ((currentjson['board'] == "AN3") and (int(currentjson['archive']) < 63)) or ((currentjson['board'] == "ANI") and (int(currentjson['archive']) < 40)) or ((currentjson['board'] == "AN") and ((int(currentjson['archive']) == 2) or (int(currentjson['archive']) == 3))):
 			two = "==="
 			three = "===="
@@ -190,6 +202,13 @@ for board in boards:
 		twoln = two + "\n"
 		lnthree = "\n" + three
 		threeln = three + "\n"
+
+		# All lines with section headings look like "\n=blah blah blah=\n", with the line returns at the beginning and end.
+		# There can be basically anything inside those equals signs (including more equals signs, which makes them subheadings).
+		# However, putting stuff after the second set of them will cause it to not render properly.
+		# The only exception is, apparently, if you put spaces after them. Let's fix that.
+		s = s.replace("== \n", "==\n").replace("==  \n", "==\n").replace("==   \n", "==\n").replace("==    \n", "==\n").replace("==     \n", "==\n")
+		# Note, 2021-11-09: This cuts the long (>2000 char) section headings from 282 to 42.
 
 		#maxcursor = s.rfind(lntwo)
 
@@ -218,7 +237,7 @@ for board in boards:
 				break;
 
 
-
+#	Note to self, 2021 November 9: There are currently 282 sections with "headings" longer than 2,000 characters. This is probably a parsing bug.
 
 
 
