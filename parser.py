@@ -207,8 +207,16 @@ for board in boards:
 		# There can be basically anything inside those equals signs (including more equals signs, which makes them subheadings).
 		# However, putting stuff after the second set of them will cause it to not render properly.
 		# The only exception is, apparently, if you put spaces after them. Let's fix that.
-		s = s.replace("== \n", "==\n").replace("==  \n", "==\n").replace("==   \n", "==\n").replace("==    \n", "==\n").replace("==     \n", "==\n")
-		# Note, 2021-11-09: This cuts the long (>2000 char) section headings from 282 to 42.
+		spaces = ""
+		tabs = ""
+		for i in range(0,10):
+			spaces = spaces + " "
+			tabs = tabs + "	"
+			s = s.replace("==" + spaces + "\n", "==\n")
+			s = s.replace(spaces + "\n", "\n")
+			s = s.replace(tabs + "\n", "\n")
+			# Note, 2021-11-09: Replacing whitespace characters at the end of headings cuts the # of long (>2000 char) section headings from 282 to 42.
+			# Note: Replacing out tabs AND whitespace characters at the end of headings cuts the # down to 33.
 
 		#maxcursor = s.rfind(lntwo)
 
