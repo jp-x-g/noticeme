@@ -159,8 +159,9 @@ pages.mkdir(mode=0o777, exist_ok = True)
 boardsDone = 0
 archivesDone = 0
 threadsDone = 0
+longTitleCount = 0
 
-aLog("\nRunning at " + str(datetime.now(timezone.utc)) + "\n")
+aLog("\nRunning : " + str(datetime.now(timezone.utc)) + "\n")
 
 for board in boards:
 	print("Processing " + boards[board]['name'])
@@ -209,14 +210,21 @@ for board in boards:
 		# The only exception is, apparently, if you put spaces after them. Let's fix that.
 		spaces = ""
 		tabs = ""
-		for i in range(0,10):
+
+		# Strip all HTML notes.
+		# text_after = re.sub(regex_search_term, regex_replacement, text_before)
+		s = re.sub("<!--.*-->\n", "\n", s)
+
+		for i in range(0,120):
 			spaces = spaces + " "
 			tabs = tabs + "	"
-			s = s.replace("==" + spaces + "\n", "==\n")
 			s = s.replace(spaces + "\n", "\n")
 			s = s.replace(tabs + "\n", "\n")
 			# Note, 2021-11-09: Replacing whitespace characters at the end of headings cuts the # of long (>2000 char) section headings from 282 to 42.
 			# Note: Replacing out tabs AND whitespace characters at the end of headings cuts the # down to 33.
+			#print("spaces:" + spaces + ".")
+			#print("tabs:" + tabs + ".")
+
 
 		#maxcursor = s.rfind(lntwo)
 
@@ -226,15 +234,47 @@ for board in boards:
 			# Ignore ===, ====, etc.
 			if cursest != s.find(lnthree, cursor):
 				# Length of thread is from thisHeadingEnd (i.e. still the ending of the last heading) to cursest (this new cursor location).
+				section = s[thisHeadingEnd:cursest]
 				length = cursest - thisHeadingEnd
-				print("B: " + str(boardsDone) + " / A: " + str(archivesDone) + " / T: " + str(threadsDone) + " (" + board + " / archive " + currentjson['archive'] + ") length: " + str(length) + " / " + sectitle)
+
+				# Now we generate some fun statistics from the section.
+				timesCt = section.count("(UTC)")
+				userlCt = section.count("[[User:")
+				usertCt = section.count("[[User talk:")
+
+
+
+				stringLog = "B: " + str(boardsDone) + " / A: " + str(archivesDone) + " / T: " + str(threadsDone) + " (" + board + " / archive " + currentjson['archive'] + ") length: " + str(length) + " (comments: " + str(timesCt) + "): " + sectitle
+
+				if timesCt > 30:
+					aLog(stringLog)
+				else:
+					print(stringLog)
+
+				########################################
+				# Time to mess with the actual text of the section.
+				########################################
+
+
+
+
+				########################################
+				# Done messing with the text of the section.
+				########################################
+
+
+
+
 				#if (length > 100000):
 					#aLog("\nLONGBOY FOUND! B: " + str(boardsDone) + " / A: " + str(archivesDone) + " / T: " + str(threadsDone) + " (" + board + " / archive " + currentjson['archive'] + ") length: " + str(length) + " / " + sectitle)
 					#aLog("\n//////////" + str(boardsDone) + "//////////" + str(archivesDone) + "//////////" + str(threadsDone) + "//////////" + board + "//////////" + currentjson['archive'] + "//////////" + str(length) + "//////////" + sectitle)
-				if (len(sectitle) > 2000):
-					aLog("\nLONGTITLE FOUND (" + str(len(sectitle)) + ") B: " + str(boardsDone) + " / A: " + str(archivesDone) + " / T: " + str(threadsDone) + " (" + board + " / archive " + currentjson['archive'] + ") length: " + str(length) + " / " + sectitle[0:1000])
 				thisHeadingEnd = s.find(twoln, (cursor+len(lntwo)))
 				sectitle = s[cursest:thisHeadingEnd]
+				if (len(sectitle) > 2000):
+					longTitleCount += 1
+					aLog("\n\n\n")
+					aLog("\nLONGTITLE FOUND (" + str(len(sectitle)) + ") B: " + str(boardsDone) + " / A: " + str(archivesDone) + " / T: " + str(threadsDone) + " (" + board + " / archive " + currentjson['archive'] + ") length: " + str(length) + " / " + sectitle[0:100])
+					aLog("\n* [http://en.wikipedia.org/w/index.php?title=" + boards[board]['archive'] + currentjson['archive'] + "&action=edit]")
 				sectitle = sectitle.replace(lntwo + " ", "").replace(" " + twoln, "").replace(two, "").replace("\n", "")
 				print(cursor)
 				threadsDone += 1
@@ -260,3 +300,6 @@ for board in boards:
 		#print(nonexistent_variable_that_crashes_the_program)
 	boardsDone += 1
 print("Bye!")
+aLog("\nRun over: " + str(datetime.now(timezone.utc)) + "\n")
+aLog("Run successful. Processed " + str(boardsDone) + " boards, " + str(archivesDone) + " archives, " + str(threadsDone) + " threads.")
+print("Long titles: " + str(longTitleCount))
