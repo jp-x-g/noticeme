@@ -18,6 +18,8 @@ import argparse
 import re
 # Required to parse regexes.
 
+import sqlite3
+# Required to base data. Base base!
 
 
 # I should parse args here.
@@ -215,7 +217,7 @@ for board in boards:
 		# text_after = re.sub(regex_search_term, regex_replacement, text_before)
 		s = re.sub("<!--.*-->\n", "\n", s)
 
-		for i in range(0,120):
+		for i in range(0,20):
 			spaces = spaces + " "
 			tabs = tabs + "	"
 			s = s.replace(spaces + "\n", "\n")
@@ -241,13 +243,17 @@ for board in boards:
 				timesCt = section.count("(UTC)")
 				userlCt = section.count("[[User:")
 				usertCt = section.count("[[User talk:")
+				linksCt = section.count("[[")
+				tempsCt = section.count("{{")
+				suppsCt = section.count("'''Support")
+				opposCt = section.count("'''Oppose")
 
 
 
-				stringLog = "B: " + str(boardsDone) + " / A: " + str(archivesDone) + " / T: " + str(threadsDone) + " (" + board + " / archive " + currentjson['archive'] + ") length: " + str(length) + " (comments: " + str(timesCt) + "): " + sectitle
+				stringLog = "B-" + str(boardsDone).ljust(2) + " A-" + str(archivesDone).ljust(5) + " T-" + str(threadsDone).ljust(7) + "| " + board.ljust(4) + " " + currentjson['archive'].ljust(4) + ", " + str(length).ljust(7) + "b, utc " + str(timesCt).ljust(4) + ", us " + str(userlCt).ljust(4) + ", ut " + str(usertCt).ljust(4) + "| " + sectitle
 
-				if timesCt > 30:
-					aLog(stringLog)
+				if timesCt > 150:
+					aLog("\n" + stringLog)
 				else:
 					print(stringLog)
 
@@ -276,7 +282,6 @@ for board in boards:
 					aLog("\nLONGTITLE FOUND (" + str(len(sectitle)) + ") B: " + str(boardsDone) + " / A: " + str(archivesDone) + " / T: " + str(threadsDone) + " (" + board + " / archive " + currentjson['archive'] + ") length: " + str(length) + " / " + sectitle[0:100])
 					aLog("\n* [http://en.wikipedia.org/w/index.php?title=" + boards[board]['archive'] + currentjson['archive'] + "&action=edit]")
 				sectitle = sectitle.replace(lntwo + " ", "").replace(" " + twoln, "").replace(two, "").replace("\n", "")
-				print(cursor)
 				threadsDone += 1
 				cursor = thisHeadingEnd
 			else:
