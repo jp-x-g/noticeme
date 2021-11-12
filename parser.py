@@ -127,7 +127,7 @@ archivesDone 	= 0
 threadsDone		= 0
 longTitleCount 	= 0
 badStamps 		= 0
-nulLEntries		= 0
+nullEntries		= 0
 
 ########################################
 # Function to log to the logfile.
@@ -238,7 +238,7 @@ pages.mkdir(mode=0o777, exist_ok = True)
 con = sqlite3.connect(database)
 cur = con.cursor()
 query = ""
-query += "CREATE TABLE threads ("
+query += "CREATE TABLE IF NOT EXISTS threads ("
 query += "title text, "
 query += "board text, "
 query += "archive integer, "
@@ -247,11 +247,11 @@ query += "altdate integer, "
 query += "length integer, "
 query += "timestamps integer, "
 query += "userlinks integer, "
-query += "usertalklinks integer"
+query += "usertlinks integer"
 query += ")"
+print(query)
 
 cur.execute(query)
-stupidFunctionThatDoesntExist()
 
 ########################################
 # Main loop: iterates over every board.
@@ -410,22 +410,37 @@ for board in boards:
 				else:
 					if verbose:
 						print(stringLog)
+				if (sectitle == "null_section_title_for_noticeme"):
+					nullEntries += 1
+
+				if (stampCount > 1) or (usedResort == 1):
+					altDate = 1
+				else:
+					altDate = 0
+				########################################
+				# Time to mess with the actual database
+				########################################
+
 				if (sectitle != "null_section_title_for_noticeme"):
-					nulLEntries += 1
+					# CREATE TABLE IF NOT EXISTS threads
+					# title		board		archive		date		altdate	
+					# length	timestamps	userlinks	usertlinks	
+					#query = "INSERT INTO threads (title, board, archive, date, altdate, length, timestamps, userlinks, usertlinks) VALUES("
+					#query += "'"  + str(sectitle) + "'"
+					#query += ",'" + str(board) + "'" 
+					#query += ","  + str(currentjson['archive'])
+					#query += ",'" + str(fir) + "'"
+					#query += ","  + str(altDate)
+					#query += ","  + str(length)
+					#query += ","  + str(timesCt)
+					#query += ","  + str(userlCt)
+					#query += ","  + str(usertCt)
+					#query += ")"
+					cur.execute("INSERT INTO threads (title, board, archive, date, altdate, length, timestamps, userlinks, usertlinks) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", (str(sectitle), str(board), str(currentjson['archive']), str(fir), str(altDate), str(length), str(timesCt), str(userlCt), str(usertCt)))
+
 				########################################
-				# Time to mess with the actual text of the section.
+				# Done messing with the database
 				########################################
-
-				if (sectitle != "null_section_title_for_noticeme"):
-
-
-
-
-				########################################
-				# Done messing with the text of the section.
-				########################################
-
-
 
 
 				#if (length > 100000):
@@ -464,4 +479,5 @@ for board in boards:
 print("Bye!")
 aLog("\nRun over: " + str(datetime.now(timezone.utc)) + "\n")
 aLog("Run successful. Processed " + str(boardsDone) + " boards, " + str(archivesDone) + " archives, " + str(threadsDone) + " threads.")
-aLog("\n     Long titles: " + str(longTitleCount) + " / bad stamps: " + str(badStamps))
+aLog("\n     Long titles: " + str(longTitleCount) + " / bad stamps: " + str(badStamps) + " / null entries: " + str(nullEntries))
+con.close()
