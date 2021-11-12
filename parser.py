@@ -134,19 +134,55 @@ def aLog(argument):
 		print(argument)
 
 
-
+########################################
+# Function to ISO-format timestamps.
+########################################
 
 def formatStamp(s):
 	# 04:20, 31 12 1969
 	#  04:20, 1 12 1969
 	# 01234567890123456
 
-	t = ""
-	t += s[13:17] + "-" + s[10:12] + "-"
-	t += s[7:8].replace(" ","").zfill(2)
-	t += "T" + s[0:6].replace(" ","").replace(",","")
+
+	yyyy = s[13:17]
+	mm = s[10:12]
+	dd = s[7:8].replace(" ","").zfill(2)
+	hhmm = s[0:6].replace(" ","").replace(",","")
+
+	t = yyyy + "-" + mm + "-" + dd + "T" + hhmm
 	return t
 
+
+########################################
+# Function to check validity of stamps.
+########################################
+
+def checkStamp(s):
+	# 1969-12-31T23:59
+	# 01234567890123456
+
+	yyyy = s[0:4]
+	mo = s[5:7]
+	dd = s[8:10]
+	hh = s[11:13]
+	mn = s[14:16]
+
+	# print(yyyy + "-" + mo + "-" + dd + "-" + hh + "-" + mn)
+
+	if ((yyyy + mo + dd + hh + mn).isdigit()) == False:
+		return False
+	if (int(yyyy) > 3000) or (int(yyyy) < 2000):
+		return False
+	if (int(mo) > 12) or (int(mo) < 1):
+		return False
+	if (int(dd) > 31) or (int(dd) < 1):
+		return False
+	if (int(hh) > 23) or (int(hh) < 0):
+		return False
+	if (int(mn) > 59) or (int(mn) < 0):
+		return False
+
+	return True
 
 ########################################
 # Make directories for data to live in.
@@ -177,6 +213,7 @@ boardsDone = 0
 archivesDone = 0
 threadsDone = 0
 longTitleCount = 0
+badStamps = 0
 
 aLog("\nRunning : " + str(datetime.now(timezone.utc)) + "\n")
 
@@ -267,22 +304,40 @@ for board in boards:
 
 				tsSearch = section.replace("January", "01").replace("February", "02").replace("March", "03").replace("April", "04").replace("May", "05").replace("June", "06").replace("July", "07").replace("August", "08").replace("September", "09").replace("October", "10").replace("November", "11").replace("December", "12")
 
+				stampFound = 0
+				stampCount = 1
 
+				while stampFound == 0:
+					#This loop will run until we find a valid stamp.
+					firstStampLoc = tsSearch.find("(UTC)")
 
-				firstStampLoc = tsSearch.find("(UTC)")
+					if (tsSearch.find("{{") < firstStampLoc) and (firstStampLoc < tsSearch.find("}}")):
+						# If the first timestamp is inside a template, it's probably a closer note or a hat note.
+						firstStampLoc = tsSearch.find("(UTC)", tsSearch.find("}}"))
+	
+					# 07:56, 31 01 2021 (UTC)
+					# 8765432109876543210 (minus)
+					# 01234567890123456
+	
+					fir = tsSearch[(firstStampLoc - 18):(firstStampLoc - 1)]
+					# Get the actual string of the first timestamp.
+					fir = fir.replace("\n", "")
+					fir = formatStamp(fir)
 
-				if (tsSearch.find("{{") < firstStampLoc) and (firstStampLoc < tsSearch.find("}}")):
-					# If the first timestamp is inside a template, it's probably a closer note or a hat note.
-					firstStampLoc = tsSearch.find("(UTC)", tsSearch.find("}}"))
+					#print(fir)
+					#print(checkStamp(fir))
 
-				# 07:56, 31 01 2021 (UTC)
-				# 8765432109876543210 (minus)
-				# 01234567890123456
-
-				fir = tsSearch[(firstStampLoc - 18):(firstStampLoc - 1)]
-				# Get the actual string of the first timestamp.
-				fir = fir.replace("\n", "")
-				fir = formatStamp(fir)
+					
+					if firstStampLoc == -1:
+						stampFound = 1;
+						fir = "1969-12-31T29:59"
+						badStamps += 1
+						break;
+					if checkStamp(fir) == True:
+						stampFound = 1;
+					else:
+						tsSearch = tsSearch[firstStampLoc]
+						stampCount += 1
 
 				stringLog = "B-" + str(boardsDone).ljust(2) + " A-" + str(archivesDone).ljust(5) + " T-" + str(threadsDone).ljust(7) + "| " + board.ljust(4) + " " + currentjson['archive'].ljust(4) + ", " + str(length).ljust(7) + "b, utc " + str(timesCt).ljust(4) + ", us " + str(userlCt).ljust(4) + ", ut " + str(usertCt).ljust(4) + ", ts " + fir + " | " + sectitle
 
@@ -290,7 +345,7 @@ for board in boards:
 					aLog("\n" + stringLog)
 				else:
 					print(stringLog)
-
+					
 				########################################
 				# Time to mess with the actual text of the section.
 				########################################
@@ -341,4 +396,4 @@ for board in boards:
 print("Bye!")
 aLog("\nRun over: " + str(datetime.now(timezone.utc)) + "\n")
 aLog("Run successful. Processed " + str(boardsDone) + " boards, " + str(archivesDone) + " archives, " + str(threadsDone) + " threads.")
-print("Long titles: " + str(longTitleCount))
+print("Long titles: " + str(longTitleCount) + " / bad stamps: " + str(badStamps))
