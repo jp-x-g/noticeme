@@ -133,6 +133,21 @@ def aLog(argument):
 		print("Setting up runtime log.")
 		print(argument)
 
+
+
+
+def formatStamp(s):
+	# 04:20, 31 12 1969
+	#  04:20, 1 12 1969
+	# 01234567890123456
+
+	t = ""
+	t += s[13:17] + "-" + s[10:12] + "-"
+	t += s[7:8].replace(" ","").zfill(2)
+	t += "T" + s[0:6].replace(" ","").replace(",","")
+	return t
+
+
 ########################################
 # Make directories for data to live in.
 ########################################
@@ -248,9 +263,28 @@ for board in boards:
 				suppsCt = section.count("'''Support")
 				opposCt = section.count("'''Oppose")
 
+				# Some obtuse code to (try to) find the timestamp of the OP.
+
+				tsSearch = section.replace("January", "01").replace("February", "02").replace("March", "03").replace("April", "04").replace("May", "05").replace("June", "06").replace("July", "07").replace("August", "08").replace("September", "09").replace("October", "10").replace("November", "11").replace("December", "12")
 
 
-				stringLog = "B-" + str(boardsDone).ljust(2) + " A-" + str(archivesDone).ljust(5) + " T-" + str(threadsDone).ljust(7) + "| " + board.ljust(4) + " " + currentjson['archive'].ljust(4) + ", " + str(length).ljust(7) + "b, utc " + str(timesCt).ljust(4) + ", us " + str(userlCt).ljust(4) + ", ut " + str(usertCt).ljust(4) + "| " + sectitle
+
+				firstStampLoc = tsSearch.find("(UTC)")
+
+				if (tsSearch.find("{{") < firstStampLoc) and (firstStampLoc < tsSearch.find("}}")):
+					# If the first timestamp is inside a template, it's probably a closer note or a hat note.
+					firstStampLoc = tsSearch.find("(UTC)", tsSearch.find("}}"))
+
+				# 07:56, 31 01 2021 (UTC)
+				# 8765432109876543210 (minus)
+				# 01234567890123456
+
+				fir = tsSearch[(firstStampLoc - 18):(firstStampLoc - 1)]
+				# Get the actual string of the first timestamp.
+				fir = fir.replace("\n", "")
+				fir = formatStamp(fir)
+
+				stringLog = "B-" + str(boardsDone).ljust(2) + " A-" + str(archivesDone).ljust(5) + " T-" + str(threadsDone).ljust(7) + "| " + board.ljust(4) + " " + currentjson['archive'].ljust(4) + ", " + str(length).ljust(7) + "b, utc " + str(timesCt).ljust(4) + ", us " + str(userlCt).ljust(4) + ", ut " + str(usertCt).ljust(4) + ", ts " + fir + " | " + sectitle
 
 				if timesCt > 150:
 					aLog("\n" + stringLog)

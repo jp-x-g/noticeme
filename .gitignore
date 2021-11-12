@@ -1,0 +1,16 @@
+# Gitignore (I'm making this manually), 2021 11 11
+
+# Folders 
+data/*
+pages-old/*
+cfg/*
+
+# Miscellaneous stuff
+notes.py
+test.py
+
+# Custom scripts that aren't part of the core package
+custom*
+custom*.sh
+custom*.py
+custom.py
