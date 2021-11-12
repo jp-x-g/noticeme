@@ -113,10 +113,12 @@ batchSize 		= 10
 dataName 		= "data"
 pagesName		= "pages"
 logName			= "log-parser.txt"
+databaseName	= "noticeboards.db"
 
 data 			= Path(os.getcwd() + "/" + dataName)
 logfile			= Path(os.getcwd() + "/" + dataName + "/" + logName)
 pages 			= Path(os.getcwd() + "/" + dataName + "/" + pagesName)
+database		= Path(os.getcwd() + "/" + dataName + "/" + databaseName)
 
 verbose			= 1
 
@@ -125,6 +127,7 @@ archivesDone 	= 0
 threadsDone		= 0
 longTitleCount 	= 0
 badStamps 		= 0
+nulLEntries		= 0
 
 ########################################
 # Function to log to the logfile.
@@ -226,6 +229,29 @@ pages.mkdir(mode=0o777, exist_ok = True)
 #        for match in pattern.findall(s):
 #            res.append(match)
 #    return res
+
+
+########################################
+# Living in the database, whoa-hoah.
+########################################
+
+con = sqlite3.connect(database)
+cur = con.cursor()
+query = ""
+query += "CREATE TABLE threads ("
+query += "title text, "
+query += "board text, "
+query += "archive integer, "
+query += "date text, "
+query += "altdate integer, "
+query += "length integer, "
+query += "timestamps integer, "
+query += "userlinks integer, "
+query += "usertalklinks integer"
+query += ")"
+
+cur.execute(query)
+stupidFunctionThatDoesntExist()
 
 ########################################
 # Main loop: iterates over every board.
@@ -356,11 +382,15 @@ for board in boards:
 					if firstStampLoc == -1:
 						stampFound = 1;
 						fir = "1969-12-31T23:59"
-						if (checkStamp(lastResort) == True) and (lastResort != "1969-12-31T23:42"):
+						#if (lastResort != "1969-12-31T23:42"):
+						#	print(lastResort)
+						#	aLog("\nLast resort:" + lastResort + " for sectitle " + sectitle + ", " + board + " / " + currentjson['archive'])
+						if  (lastResort != "1969-12-31T23:42") and (checkStamp(lastResort) == True):
+							# If there's an archive-top stamp, we can at least use that.
 							fir = lastResort
 							usedLast = 1
-							# If there's an archive-top stamp, we can at least use that.
-						badStamps += 1
+						else:
+							badStamps += 1
 						break;
 					if checkStamp(fir) == True:
 						stampFound = 1;
@@ -370,20 +400,23 @@ for board in boards:
 
 				stringLog = "B-" + str(boardsDone).ljust(2) + " A-" + str(archivesDone).ljust(5) + " T-" + str(threadsDone).ljust(7) + "| " + board.ljust(5) + " " + currentjson['archive'].ljust(4) + ", " + str(length).ljust(7) + "b, utc " + str(timesCt).ljust(4) + ", us " + str(userlCt).ljust(4) + ", ut " + str(usertCt).ljust(4) + ", ts " + fir + " (stamp count: " + str(stampCount) + ") | " + sectitle
 
-				# we also have stampCount, and usedLast
+				# we also have stampCount, and usedResort
 
 				# Lot of sections with the title "null". 
 
-				if (fir == "1969-12-31T23:59") and (sectitle != "null_section_title_for_noticeme"):
+				if ((fir == "1969-12-31T23:59") and (sectitle != "null_section_title_for_noticeme")) or (usedResort == 1):
 					# Test condition: log these ones to file.
 					aLog("\n" + stringLog)
 				else:
 					if verbose:
 						print(stringLog)
-					
+				if (sectitle != "null_section_title_for_noticeme"):
+					nulLEntries += 1
 				########################################
 				# Time to mess with the actual text of the section.
 				########################################
+
+				if (sectitle != "null_section_title_for_noticeme"):
 
 
 
