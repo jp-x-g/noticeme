@@ -102,19 +102,29 @@ boards = {
 
 print("Hi!")
 
+
+
 ########################################
 # Initialize some things.
 ########################################
-httpApi 	= "https://en.wikipedia.org/w/api.php"
-sleepTime 	= 0.01
-batchSize 	= 10
-dataName 	= "data"
-pagesName	= "pages"
-logName		= "log-parser.txt"
+httpApi 		= "https://en.wikipedia.org/w/api.php"
+sleepTime 		= 0.01
+batchSize 		= 10
+dataName 		= "data"
+pagesName		= "pages"
+logName			= "log-parser.txt"
 
-data 		= Path(os.getcwd() + "/" + dataName)
-logfile		= Path(os.getcwd() + "/" + dataName + "/" + logName)
-pages 		= Path(os.getcwd() + "/" + dataName + "/" + pagesName)
+data 			= Path(os.getcwd() + "/" + dataName)
+logfile			= Path(os.getcwd() + "/" + dataName + "/" + logName)
+pages 			= Path(os.getcwd() + "/" + dataName + "/" + pagesName)
+
+verbose			= 1
+
+boardsDone		= 0
+archivesDone 	= 0
+threadsDone		= 0
+longTitleCount 	= 0
+badStamps 		= 0
 
 ########################################
 # Function to log to the logfile.
@@ -139,19 +149,31 @@ def aLog(argument):
 ########################################
 
 def formatStamp(s):
+	s = s.strip()
 	# 04:20, 31 12 1969
-	#  04:20, 1 12 1969
+	# 04:20, 1 12 1969
 	# 01234567890123456
-
+	if len(s) == 16:
+		s = s[0:7] + "0" + s[7:]
+	# 04:20, 01 12 1969
+	# 01234567890123456
 
 	yyyy = s[13:17]
 	mm = s[10:12]
-	dd = s[7:8].replace(" ","").zfill(2)
-	hhmm = s[0:6].replace(" ","").replace(",","")
+	dd = s[7:9]
+	hhmm = s[0:5]
 
 	t = yyyy + "-" + mm + "-" + dd + "T" + hhmm
 	return t
 
+
+########################################
+# Function to do nothing.
+########################################
+
+def derp():
+	derp = 1;
+	return "derp"
 
 ########################################
 # Function to check validity of stamps.
@@ -209,11 +231,6 @@ pages.mkdir(mode=0o777, exist_ok = True)
 # Main loop: iterates over every board.
 ########################################
 
-boardsDone = 0
-archivesDone = 0
-threadsDone = 0
-longTitleCount = 0
-badStamps = 0
 
 aLog("\nRunning : " + str(datetime.now(timezone.utc)) + "\n")
 
@@ -228,12 +245,13 @@ for board in boards:
 			currentfile = open(path, "r")
 			currentjson = json.load(currentfile)
 			currentfile.close()
-			print("B: " + str(boardsDone) + " / A: " + str(archivesDone) + " / T: " + str(threadsDone) + " (" + board + " / archive " + currentjson['archive'] + ")")
+			if verbose:
+				print("B: " + str(boardsDone) + " / A: " + str(archivesDone) + " / T: " + str(threadsDone) + " (" + board + " / archive " + currentjson['archive'] + ")")
 		archivesDone += 1
 		s = currentjson['content']
 		cursor = 0
 		thisHeadingEnd = 0
-		sectitle = "null"
+		sectitle = "null_section_title_for_noticeme"
 
 		two = "=="
 		three = "==="
@@ -303,9 +321,12 @@ for board in boards:
 				# Some obtuse code to (try to) find the timestamp of the OP.
 
 				tsSearch = section.replace("January", "01").replace("February", "02").replace("March", "03").replace("April", "04").replace("May", "05").replace("June", "06").replace("July", "07").replace("August", "08").replace("September", "09").replace("October", "10").replace("November", "11").replace("December", "12")
+				tsSearch = tsSearch.replace("Jan", "01").replace("Feb", "02").replace("Mar", "03").replace("Apr", "04").replace("May", "05").replace("Jun", "06").replace("Jul", "07").replace("Aug", "08").replace("Sep", "09").replace("Oct", "10").replace("Nov", "11").replace("Dec", "12")
 
 				stampFound = 0
 				stampCount = 1
+				lastResort = "1969-12-31T23:42"
+				usedResort = 0
 
 				while stampFound == 0:
 					#This loop will run until we find a valid stamp.
@@ -313,6 +334,8 @@ for board in boards:
 
 					if (tsSearch.find("{{") < firstStampLoc) and (firstStampLoc < tsSearch.find("}}")):
 						# If the first timestamp is inside a template, it's probably a closer note or a hat note.
+						lastResort = formatStamp(tsSearch[(firstStampLoc - 18):(firstStampLoc - 1)].replace("\n", ""))
+						# Save the archive timestamp, in case we are totally unable to find anything else.
 						firstStampLoc = tsSearch.find("(UTC)", tsSearch.find("}}"))
 	
 					# 07:56, 31 01 2021 (UTC)
@@ -322,29 +345,41 @@ for board in boards:
 					fir = tsSearch[(firstStampLoc - 18):(firstStampLoc - 1)]
 					# Get the actual string of the first timestamp.
 					fir = fir.replace("\n", "")
+					#print(fir + "|" + formatStamp(fir))
 					fir = formatStamp(fir)
 
-					#print(fir)
-					#print(checkStamp(fir))
+					if (stampCount > 1):
+						derp()
+						#print(str(firstStampLoc) + " / " + fir + str(checkStamp(fir)))
 
 					
 					if firstStampLoc == -1:
 						stampFound = 1;
-						fir = "1969-12-31T29:59"
+						fir = "1969-12-31T23:59"
+						if (checkStamp(lastResort) == True) and (lastResort != "1969-12-31T23:42"):
+							fir = lastResort
+							usedLast = 1
+							# If there's an archive-top stamp, we can at least use that.
 						badStamps += 1
 						break;
 					if checkStamp(fir) == True:
 						stampFound = 1;
 					else:
-						tsSearch = tsSearch[firstStampLoc]
+						tsSearch = tsSearch[(firstStampLoc + 1):]
 						stampCount += 1
 
-				stringLog = "B-" + str(boardsDone).ljust(2) + " A-" + str(archivesDone).ljust(5) + " T-" + str(threadsDone).ljust(7) + "| " + board.ljust(4) + " " + currentjson['archive'].ljust(4) + ", " + str(length).ljust(7) + "b, utc " + str(timesCt).ljust(4) + ", us " + str(userlCt).ljust(4) + ", ut " + str(usertCt).ljust(4) + ", ts " + fir + " | " + sectitle
+				stringLog = "B-" + str(boardsDone).ljust(2) + " A-" + str(archivesDone).ljust(5) + " T-" + str(threadsDone).ljust(7) + "| " + board.ljust(5) + " " + currentjson['archive'].ljust(4) + ", " + str(length).ljust(7) + "b, utc " + str(timesCt).ljust(4) + ", us " + str(userlCt).ljust(4) + ", ut " + str(usertCt).ljust(4) + ", ts " + fir + " (stamp count: " + str(stampCount) + ") | " + sectitle
 
-				if timesCt > 150:
+				# we also have stampCount, and usedLast
+
+				# Lot of sections with the title "null". 
+
+				if (fir == "1969-12-31T23:59") and (sectitle != "null_section_title_for_noticeme"):
+					# Test condition: log these ones to file.
 					aLog("\n" + stringLog)
 				else:
-					print(stringLog)
+					if verbose:
+						print(stringLog)
 					
 				########################################
 				# Time to mess with the actual text of the section.
@@ -396,4 +431,4 @@ for board in boards:
 print("Bye!")
 aLog("\nRun over: " + str(datetime.now(timezone.utc)) + "\n")
 aLog("Run successful. Processed " + str(boardsDone) + " boards, " + str(archivesDone) + " archives, " + str(threadsDone) + " threads.")
-print("Long titles: " + str(longTitleCount) + " / bad stamps: " + str(badStamps))
+aLog("\n     Long titles: " + str(longTitleCount) + " / bad stamps: " + str(badStamps))
