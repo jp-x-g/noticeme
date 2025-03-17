@@ -26,6 +26,12 @@ def load_boards():
 
 boards = load_boards()
 
+for board in boards:
+	print(board['short'])
+	print(board['name'])
+	print(board['page'])
+	print(board['archive'])
+
 ########################################
 # Initialize some things.
 ########################################
