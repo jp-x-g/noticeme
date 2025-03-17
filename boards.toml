@@ -1,85 +1,97 @@
-title = "Wikipedia noticeboards"
-
 [AN]
-short   = "AN"
-name    = "Administrators' noticeboard"
-page    = "Wikipedia:Administrators'_noticeboard"
-archive = "Wikipedia:Administrators'_noticeboard/Archive"
+short     = "AN"
+name      = "Administrators' noticeboard"
+page      = "Administrators'_noticeboard"
+archive   = "Administrators'_noticeboard/Archive"
+namespace = 4
 
 [AN3]
-short   = "AN3"
-name    = "3RR noticeboard"
-page    = "Wikipedia:Administrators'_noticeboard/Edit_warring"
-archive = "Wikipedia:Administrators'_noticeboard/3RRArchive"
+short     = "AN3"
+name      = "3RR noticeboard"
+page      = "Administrators'_noticeboard/Edit_warring"
+archive   = "Administrators'_noticeboard/3RRArchive"
+namespace = 4
 
 [ANI]
-short   = "ANI"
-name    = "Annie"
-page    = "Wikipedia:Administrators'_noticeboard/Incidents"
-archive = "Wikipedia:Administrators'_noticeboard/IncidentArchive"
+short     = "ANI"
+name      = "Annie"
+page      = "Administrators'_noticeboard/Incidents"
+archive   = "Administrators'_noticeboard/IncidentArchive"
+namespace = 4
 
 [AE]
-short   = "AE"
-name    = "Arbitration enforcement"
-page    = "Wikipedia:Arbitration/Requests/Enforcement"
-archive = "Wikipedia:Arbitration/Requests/Enforcement/Archive"
+short     = "AE"
+name      = "Arbitration enforcement"
+page      = "Arbitration/Requests/Enforcement"
+archive   = "Arbitration/Requests/Enforcement/Archive"
+namespace = 4
 
 [BLPN]
-short   = "BLPN"
-name    = "BLP noticeboard"
-page    = "Wikipedia:Biographies_of_living_persons/Noticeboard"
-archive = "Wikipedia:Biographies_of_living_persons/Noticeboard/Archive"
+short     = "BLPN"
+name      = "BLP noticeboard"
+page      = "Biographies_of_living_persons/Noticeboard"
+archive   = "Biographies_of_living_persons/Noticeboard/Archive"
+namespace = 4
 
 [COIN]
-short   = "COIN"
-name    = "Conflict of interest noticeboard"
-page    = "Wikipedia:Conflict_of_interest/Noticeboard"
-archive = "Wikipedia:Conflict_of_interest/Noticeboard/Archive_"
+short     = "COIN"
+name      = "Conflict of interest noticeboard"
+page      = "Conflict_of_interest/Noticeboard"
+archive   = "Conflict_of_interest/Noticeboard/Archive_"
+namespace = 4
 
 [DRN]
-short   = "DRN"
-name    = "Dispute resolution noticeboard"
-page    = "Wikipedia:Dispute_resolution_noticeboard"
-archive = "Wikipedia:Dispute_resolution_noticeboard/Archive_"
+short     = "DRN"
+name      = "Dispute resolution noticeboard"
+page      = "Dispute_resolution_noticeboard"
+archive   = "Dispute_resolution_noticeboard/Archive_"
+namespace = 4
 
 [ELN]
-short   = "ELN"
-name    = "External links noticboard"
-page    = "Wikipedia:External_links/Noticeboard"
-archive = "Wikipedia:External_links/Noticeboard/Archive_"
+short     = "ELN"
+name      = "External links noticboard"
+page      = "External_links/Noticeboard"
+archive   = "External_links/Noticeboard/Archive_"
+namespace = 4
 
 [FTN]
-short   = "FTN"
-name    = "Fringe theories noticeboard"
-page    = "Wikipedia:Fringe_theories/Noticeboard"
-archive = "Wikipedia:Fringe_theories/Noticeboard/Archive_"
+short     = "FTN"
+name      = "Fringe theories noticeboard"
+page      = "Fringe_theories/Noticeboard"
+archive   = "Fringe_theories/Noticeboard/Archive_"
+namespace = 4
 
 [NORN]
-short   = "NORN"
-name    = "Original research noticeboard"
-page    = "Wikipedia:No_original_research/Noticeboard"
-archive = "Wikipedia:No_original_research/Noticeboard/Archive_"
+short     = "NORN"
+name      = "Original research noticeboard"
+page      = "No_original_research/Noticeboard"
+archive   = "No_original_research/Noticeboard/Archive_"
+namespace = 4
 
 [NPOVN]
-short   = "NPOVN"
-name    = "NPOV noticeboard"
-page    = "Wikipedia:Neutral_point_of_view/Noticeboard"
-archive = "Wikipedia:Neutral_point_of_view/Noticeboard/Archive_"
+short     = "NPOVN"
+name      = "NPOV noticeboard"
+page      = "Neutral_point_of_view/Noticeboard"
+archive   = "Neutral_point_of_view/Noticeboard/Archive_"
+namespace = 4
 
 [RSN]
-short   = "RSN"
-name    = "Reliable sources noticeboard"
-page    = "Wikipedia:Reliable_sources/Noticeboard"
-archive = "Wikipedia:Reliable_sources/Noticeboard/Archive_"
+short     = "RSN"
+name      = "Reliable sources noticeboard"
+page      = "Reliable_sources/Noticeboard"
+archive   = "Reliable_sources/Noticeboard/Archive_"
+namespace = 4
 
 [BN]
-short   = "BN"
-name    = "Bureaucrats' noticeboard"
-page    = "Wikipedia:Bureaucrats'_noticeboard"
-archive = "Wikipedia:Bureaucrats'_noticeboard/Archive_"
+short     = "BN"
+name      = "Bureaucrats' noticeboard"
+page      = "Bureaucrats'_noticeboard"
+archive   = "Bureaucrats'_noticeboard/Archive_"
+namespace = 4
 
 [ARBN]
-short   = "ARBN"
-name    = "Arbitration noticeboard"
-page    = "Wikipedia:Arbitration_Committee/Noticeboard"
-archive = "Wikipedia:Arbitration_Committee/Noticeboard/Archive_"
+short     = "ARBN"
+name      = "Arbitration noticeboard"
+page      = "Arbitration_Committee/Noticeboard"
+archive   = "Arbitration_Committee/Noticeboard/Archive_"
+namespace = 4
