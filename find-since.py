@@ -44,35 +44,34 @@ def aLog(argument):
 		print("Setting up runtime log.")
 		print(argument)
 
-# Find the most recent archive of a noticeboard.
+# Get an array of all pages with a prefix.
 
-def getPrefixIndex(prefix="The", apcontinue="", ns=0, prevpages=[]):
+def getPrefixIndex(prefix="The", ns=0):
 	#print(f"Prefix: '{prefix}', namespace: '{ns}'")
 	prefix = prefix.replace("Wikipedia:", "")
-	response = requests.get(httpApi, params={
-		"action"     : "query",
-		"list"       : "allpages",
-		"format"     : "json",
-		"apprefix"   : prefix,
-		"aplimit"    : "500",
-		"apcontinue" : apcontinue,
-		"apnamespace": ns
-	})
-	print(response.request.url)
-	if (len(prevpages) > 0):
-		print(prevpages[0])
-	print(f"Retrieving pages (so far: {len(prevpages)})")
-	data = response.json()
-	#print(data)
-	for page in data['query']['allpages']:
-		#print(page)
-		#print(page['title'])
-		prevpages.append(page['title'])
-	if 'continue' in data:
-		getPrefixIndex(prefix=prefix, ns=ns, prevpages=prevpages, apcontinue=data['continue']['apcontinue'])
+	prevpages = []
+	apcontinue = ""
 
-	print("Okay")
-	return prevpages
+	while True:
+		response = requests.get(httpApi, params={
+			"action"     : "query",
+			"list"       : "allpages",
+			"format"     : "json",
+			"apprefix"   : prefix,
+			"aplimit"    : "500",
+			"apnamespace": ns,
+			"apcontinue" : apcontinue
+		})
+		#print(response.request.url)
+		print(f"Retrieving pages (so far: {len(prevpages)})")
+		data = response.json()
+		#print(data)
+		for page in data['query']['allpages']:
+			prevpages.append(page['title'])
+		if 'continue' in data:
+			apcontinue = data['continue']['apcontinue']
+		else
+			return prevpages
 
 	# "batchcomplete":"","continue":{"apcontinue":"TheYouGeneration","continue":"-||"},
 	# {"batchcomplete":"","query":
