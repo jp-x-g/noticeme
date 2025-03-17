@@ -1,0 +1,85 @@
+title = "Wikipedia noticeboards"
+
+[AN]
+short   = "AN"
+name    = "Administrators' noticeboard"
+page    = "Wikipedia:Administrators'_noticeboard"
+archive = "Wikipedia:Administrators'_noticeboard/Archive"
+
+[AN3]
+short   = "AN3"
+name    = "3RR noticeboard"
+page    = "Wikipedia:Administrators'_noticeboard/Edit_warring"
+archive = "Wikipedia:Administrators'_noticeboard/3RRArchive"
+
+[ANI]
+short   = "ANI"
+name    = "Annie"
+page    = "Wikipedia:Administrators'_noticeboard/Incidents"
+archive = "Wikipedia:Administrators'_noticeboard/IncidentArchive"
+
+[AE]
+short   = "AE"
+name    = "Arbitration enforcement"
+page    = "Wikipedia:Arbitration/Requests/Enforcement"
+archive = "Wikipedia:Arbitration/Requests/Enforcement/Archive"
+
+[BLPN]
+short   = "BLPN"
+name    = "BLP noticeboard"
+page    = "Wikipedia:Biographies_of_living_persons/Noticeboard"
+archive = "Wikipedia:Biographies_of_living_persons/Noticeboard/Archive"
+
+[COIN]
+short   = "COIN"
+name    = "Conflict of interest noticeboard"
+page    = "Wikipedia:Conflict_of_interest/Noticeboard"
+archive = "Wikipedia:Conflict_of_interest/Noticeboard/Archive_"
+
+[DRN]
+short   = "DRN"
+name    = "Dispute resolution noticeboard"
+page    = "Wikipedia:Dispute_resolution_noticeboard"
+archive = "Wikipedia:Dispute_resolution_noticeboard/Archive_"
+
+[ELN]
+short   = "ELN"
+name    = "External links noticboard"
+page    = "Wikipedia:External_links/Noticeboard"
+archive = "Wikipedia:External_links/Noticeboard/Archive_"
+
+[FTN]
+short   = "FTN"
+name    = "Fringe theories noticeboard"
+page    = "Wikipedia:Fringe_theories/Noticeboard"
+archive = "Wikipedia:Fringe_theories/Noticeboard/Archive_"
+
+[NORN]
+short   = "NORN"
+name    = "Original research noticeboard"
+page    = "Wikipedia:No_original_research/Noticeboard"
+archive = "Wikipedia:No_original_research/Noticeboard/Archive_"
+
+[NPOVN]
+short   = "NPOVN"
+name    = "NPOV noticeboard"
+page    = "Wikipedia:Neutral_point_of_view/Noticeboard"
+archive = "Wikipedia:Neutral_point_of_view/Noticeboard/Archive_"
+
+[RSN]
+short   = "RSN"
+name    = "Reliable sources noticeboard"
+page    = "Wikipedia:Reliable_sources/Noticeboard"
+archive = "Wikipedia:Reliable_sources/Noticeboard/Archive_"
+
+[BN]
+short   = "BN"
+name    = "Bureaucrats' noticeboard"
+page    = "Wikipedia:Bureaucrats'_noticeboard"
+archive = "Wikipedia:Bureaucrats'_noticeboard/Archive_"
+
+[ARBN]
+short   = "ARBN"
+name    = "Arbitration noticeboard"
+page    = "Wikipedia:Arbitration_Committee/Noticeboard"
+archive = "Wikipedia:Arbitration_Committee/Noticeboard/Archive_"
