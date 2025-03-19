@@ -41,36 +41,48 @@ def load_file(filename):
 		print(f"Error: Could not process {filename}.")
 		sys.exit(1)
 
+
+def get_info(filename):
+	try:
+		boards    = load_boards();
+		# {'short'    : 'AE',
+		#  'name'     : 'Arbitration enforcement',
+		#  'page'     : 'Arbitration/Requests/Enforcement',
+		#  'archive'  : 'Arbitration/Requests/Enforcement/Archive',
+		#  'namespace': '4'
+		# }
+		nses      = load_namespaces();
+		short     = filename.split("/")[-1:][0].split("-")[0]
+		arch      = filename.split("/")[-1:][0].split("-")[1].replace(".txt", "")
+		#print(board)
+		namespace = nses['number'][boards[short]['namespace']]
+		if namespace != "":
+			namespace += ":"
+		if arch == "999999":
+			pagename = f"{boards[short]['page']}"
+		else:
+			pagename  = f"{boards[short]['archive']}{arch}"
+		print(f"{namespace}{pagename}")
+	except:
+		pagename = filename
+	return {
+		"short"    : short,
+		"arch"     : arch,
+		"namespace": namespace,
+		"pagename" : pagename
+	}
+
 ############################################################
 # Those are utility functions; this is the main logic.
 ############################################################
 
 def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26")):
 	if (title is None) and (filename is not None):
-		try:
-			# This is a goofy kludge.
-			#print(filename)
-			boards    = load_boards();
-			# {'short'    : 'AE',
-			#  'name'     : 'Arbitration enforcement',
-			#  'page'     : 'Arbitration/Requests/Enforcement',
-			#  'archive'  : 'Arbitration/Requests/Enforcement/Archive',
-			#  'namespace': '4'
-			# }
-			nses      = load_namespaces();
-			short     = filename.split("/")[-1:][0].split("-")[0]
-			arch      = filename.split("/")[-1:][0].split("-")[1].replace(".txt", "")
-			#print(board)
-			namespace = nses['number'][boards[short]['namespace']]
-			if namespace != "":
-				namespace += ":"
-			if arch == 9999:
-				pagename = f"{boards[short]['page']}"
-			else:
-				pagename  = f"{boards[short]['archive']}{arch}"
-			print(f"{namespace}{pagename}")
-		except:
-			pagename = filename
+		i = get_info(filename)
+		short     = i['short']
+		arch      = i['arch']
+		namespace = i['namespace']
+		pagename  = i['pagename']
 
 	# Now we are actually parsing the page.
 	wikicode = mwparserfromhell.parse(page)
@@ -86,6 +98,10 @@ def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26")):
 		sect = section[len(head):]
 		head = head[2:-2].strip()
 		#print(head)
+		head = mwparserfromhell.utils.parse_anything(head)
+		#print(head)
+		head = head.strip_code()
+		print(head)
 		#print("Hoomba baroomba")
 		#print(section)
 		timestamps = re.findall(stampgex, sect)

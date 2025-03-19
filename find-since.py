@@ -232,7 +232,21 @@ def find_since(since):
 			if (args.scrape is not None):
 				write(path.with_suffix(".txt"), text)
 			if args.analyze is not None:
-				analyzed += parse_page.parse_page(text, filename=f"{item[2]}", prunedate=since)
+				bolus = parse_page.parse_page(text, filename=f"{item[2]}", prunedate=since)
+				for bitem in bolus:
+					i = parse_page.get_info(f"{item[2]}")
+					short     = i['short']
+					arch      = i['arch']
+					namespace = i['namespace']
+					pagename  = i['pagename']
+
+					bitem['head'] = bitem['head'].replace("[","").replace("]","")
+					bitem['head'] = f"[[{namespace}{pagename}#{bitem['head']}|{bitem['head']}]]"
+
+					if bitem['archive'] == "999999":
+						bitem['archive'] = "Current"
+
+				analyzed += bolus
 
 	if args.analyze is not None:
 		write("data.JAYSON.json", json.dumps(analyzed, indent=2))
