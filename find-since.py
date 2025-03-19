@@ -15,6 +15,7 @@ import argparse
 import first_revision
 import tsv_to_wikitable
 import get_page
+import parse_page
 
 print("Hi!")
 
@@ -156,11 +157,13 @@ def find_since(since):
 		archSpace    = arch.replace("_", " ")
 		spacename    = f"{namespaces["number"][board[1]['namespace']]}"
 		print(f"{board[1]['name']} (archive prefix: {spacename}:{board[1]['archive']})")
-		# This actually hits the API a bunch of times.
+		########################################
 		archivePages = getPrefixIndex(prefix=board[1]['archive'], ns=board[1]['namespace'])
+		# Wowzers! This hits the API.
+		########################################
 		# archivePages.sort()
 		#for page in archivePages
-		#	print(page)
+		#	print(page)`
 		for page in natsorted(archivePages):
 			page = stripBeginning(page, f"{spacename}:{arch}")
 			page = stripBeginning(page, f"{spacename}:{archSpace}")
@@ -182,20 +185,19 @@ def find_since(since):
 		allPages.append([f"{spacename}:{board[1]['page']}", f"{nowstamp}", f"{board[1]['short']}-999999"])
 		# One-off handler for the current page
 
-		areWeDoneYet = False 
 		for page in pagesNumeric:
+			########################################
 			rev = first_revision.fetch(f"{spacename}:{arch}{page}")
-			# This hits the API.
+			# Wowzers! This hits the API.
+			########################################
 			# 2025-02-23T12:00:37Z
 			revdate = parse(rev).astimezone(timezone.utc).replace(tzinfo=None)
 			pagesSince.append(f"{spacename}:{arch}{page}")
 			datesSince.append(f"{revdate}")
-
 			allPages.append([f"{spacename}:{arch}{page}", f"{revdate}", f"{board[1]['short']}-{page}"])
-			if areWeDoneYet == True:
-				break
+
 			if revdate < since:
-				areWeDoneYet = True
+				break
 		#print(pagesSince)
 		#print(datesSince)
 
@@ -206,25 +208,59 @@ def find_since(since):
 		stringy = ""
 		for item in allPages:
 			stringy += f"{item[0]}\t{item[1]}\n"
-		write(stringy, args.list)
+		write(args.list, stringy)
 		print(f"Saved to {args.list}")
-		exit()
-	if args.scrape is not None:
+
+	if (args.scrape is not None) or (args.analyze is not None):
 		print(f"args.scrape is {args.scrape}")
-		scrapeDir = Path(args.scrape)
-		scrapeDir.mkdir(mode=0o777, exist_ok=True)
+		print(f"args.analyze is {args.analyze}")
+		if (args.scrape is not None):
+			scrapeDir = Path(args.scrape)
+			scrapeDir.mkdir(mode=0o777, exist_ok=True)
+		if (args.analyze is not None):
+			analyzed = []
 		count = 0
 		for item in allPages:
+			count += 1
 			print(f"{count} of {len(allPages)}: getting wikitext for {item[0]}")
-			#text = get_page.wikitext(item[0])
-			text = "Hooma baroomba"
+			#text = "Hooma baroomba"
+			########################################
+			text = get_page.wikitext(item[0])
+			# Wowzers! This hits the API!
+			########################################
 			path = scrapeDir / f"{item[2]}"
-			write(text, path)
-		exit()
+			if (args.scrape is not None):
+				write(path.with_suffix(".txt"), text)
+			if args.analyze is not None:
+				analyzed += parse_page.parse_page(text, filename=f"{item[2]}", prunedate=since)
 
 	if args.analyze is not None:
-		print(f"args.analyze is {args.analyze}")
-		# Write this function.
+		write("data.JAYSON.json", json.dumps(analyzed, indent=2))
+
+		tsv = "\t".join(analyzed[0].keys())
+		tsv += "\n"
+		for row in analyzed[1:]:
+			tsv += "\t".join(map(str, row.values()))
+			tsv += "\n"
+
+		if (args.format == "tsv") or (args.format == "all"):
+			write("data/TASV.tsv", tsv)
+
+		if (args.format == "wikitable") or (args.format == "all"):
+			wikitable = tsv_to_wikitable.convert(
+				inputtext   = tsv,
+				output      = None,
+				rotate      = False,
+				skipheader  = False,
+				classes     = "wikitable sortable",
+				attrs       = None,
+				headerattrs = None,
+				rowattrs    = None,
+				altattrs    = None
+				)
+			write("data/wikitable.txt", wikitable)
+
+
 	if args.format is not None:
 		print(f"args.format is {args.format}")
 		# Write this function.
@@ -268,14 +304,14 @@ if __name__ == "__main__":
 		nargs   = "?",
 		const   = f"data/{nowstamp} analyze",
 		default = None,
-		help    = "Analyzes the wikitext, and writes a report to specified path. Default is: ./data/YYYY-MM-DD HH:MM:SS analyze(file extension)"
+		help    = "Downloads the wikitext of the archives, analyzes the wikitext, and writes a report to specified path. Default is: ./data/YYYY-MM-DD HH:MM:SS analyze(file extension)"
 	)
 
 	parser.add_argument(
 		"-f",
 		"--format",
-		default = "tsv",
-		help    = "Output format for wikitext analysis. Options are \"tsv\" or \"wikitable\"."
+		default = "json",
+		help    = "Output format for wikitext analysis. Options are \"tsv\", \"json\", \"wikitable\" or \"all\"."
 	)
 	#help    = "Output format for wikitext analysis. Options are \"TSV\", \"wikitable\", or \"json\"."
 

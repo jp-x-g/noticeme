@@ -100,6 +100,8 @@ If calling convert(), there are optional additional keyword arguments:
     headerattrs - Same, but to apply to just the header row
     rowattrs    - Or to apply to each row of the rest of the table
     altattrs    - Or to every-other-row (alternates with rowattrs, or default)
+
+    output      - Output file path (only really useful from terminal)
 """
 
 

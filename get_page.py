@@ -33,16 +33,21 @@ def wikitext(page, namespace="0"):
 		"formatversion": "2"
 	}
 	response = requests.get(httpApi, params=params)
-	
 	if response.status_code == 200:
 		data = response.json()
+		#print(data)
+		#print(data["query"]["pages"][0])
+		#print(data["query"]["pages"]["revisions"])
 		try:
 			pages = data["query"]["pages"]
 			try:
 				return pages["revisions"][0]["slots"]["main"]["content"]
 			except:
-				print("Could not retrieve page content.")
-				return data
+				try:
+					return pages[0]["revisions"][0]["slots"]["main"]["content"]
+				except:
+					print("Could not retrieve page content.")
+					return data
 		except:
 			print("Could not get pages from query response.")
 			return data
