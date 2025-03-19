@@ -1,97 +1,161 @@
+############################################################
+# DISCUSSION NOTICEBOARDS
+############################################################
+
 [AN]
 short     = "AN"
 name      = "Administrators' noticeboard"
 page      = "Administrators'_noticeboard"
 archive   = "Administrators'_noticeboard/Archive"
-namespace = 4
+namespace = "4"
 
 [AN3]
 short     = "AN3"
 name      = "3RR noticeboard"
 page      = "Administrators'_noticeboard/Edit_warring"
 archive   = "Administrators'_noticeboard/3RRArchive"
-namespace = 4
+namespace = "4"
 
 [ANI]
 short     = "ANI"
 name      = "Annie"
 page      = "Administrators'_noticeboard/Incidents"
 archive   = "Administrators'_noticeboard/IncidentArchive"
-namespace = 4
+namespace = "4"
 
 [AE]
 short     = "AE"
 name      = "Arbitration enforcement"
 page      = "Arbitration/Requests/Enforcement"
 archive   = "Arbitration/Requests/Enforcement/Archive"
-namespace = 4
+namespace = "4"
 
 [BLPN]
 short     = "BLPN"
 name      = "BLP noticeboard"
 page      = "Biographies_of_living_persons/Noticeboard"
 archive   = "Biographies_of_living_persons/Noticeboard/Archive"
-namespace = 4
+namespace = "4"
 
 [COIN]
 short     = "COIN"
 name      = "Conflict of interest noticeboard"
 page      = "Conflict_of_interest/Noticeboard"
 archive   = "Conflict_of_interest/Noticeboard/Archive_"
-namespace = 4
-
-[DRN]
-short     = "DRN"
-name      = "Dispute resolution noticeboard"
-page      = "Dispute_resolution_noticeboard"
-archive   = "Dispute_resolution_noticeboard/Archive_"
-namespace = 4
+namespace = "4"
 
 [ELN]
 short     = "ELN"
 name      = "External links noticboard"
 page      = "External_links/Noticeboard"
 archive   = "External_links/Noticeboard/Archive_"
-namespace = 4
+namespace = "4"
 
 [FTN]
 short     = "FTN"
 name      = "Fringe theories noticeboard"
 page      = "Fringe_theories/Noticeboard"
 archive   = "Fringe_theories/Noticeboard/Archive_"
-namespace = 4
+namespace = "4"
 
 [NORN]
 short     = "NORN"
 name      = "Original research noticeboard"
 page      = "No_original_research/Noticeboard"
 archive   = "No_original_research/Noticeboard/Archive_"
-namespace = 4
+namespace = "4"
 
 [NPOVN]
 short     = "NPOVN"
 name      = "NPOV noticeboard"
 page      = "Neutral_point_of_view/Noticeboard"
 archive   = "Neutral_point_of_view/Noticeboard/Archive_"
-namespace = 4
+namespace = "4"
 
 [RSN]
 short     = "RSN"
 name      = "Reliable sources noticeboard"
 page      = "Reliable_sources/Noticeboard"
 archive   = "Reliable_sources/Noticeboard/Archive_"
-namespace = 4
+namespace = "4"
 
 [BN]
 short     = "BN"
 name      = "Bureaucrats' noticeboard"
 page      = "Bureaucrats'_noticeboard"
 archive   = "Bureaucrats'_noticeboard/Archive_"
-namespace = 4
+namespace = "4"
+
+############################################################
+# ANNOUNCEMENT BOARDS
+############################################################
 
 [ARBN]
 short     = "ARBN"
 name      = "Arbitration noticeboard"
 page      = "Arbitration_Committee/Noticeboard"
 archive   = "Arbitration_Committee/Noticeboard/Archive_"
-namespace = 4
+namespace = "4"
+
+############################################################
+# MODERATED BOARDS
+############################################################
+
+[DRN]
+short     = "DRN"
+name      = "Dispute resolution noticeboard"
+page      = "Dispute_resolution_noticeboard"
+archive   = "Dispute_resolution_noticeboard/Archive_"
+namespace = "4"
+
+############################################################
+# VILLAGE PUMPS
+############################################################
+
+[VPR]
+short     = "VPR"
+name      = "Proposals village pump"
+page      = "Village_pump_(proposals)"
+archive   = "Village_pump_(proposals)/Archive_"
+namespace = "4"
+# Created 2004-09-14 22:29:23
+
+[VPT]
+short     = "VPT"
+name      = "Technical village pump"
+page      = "Village_pump_(technical)"
+archive   = "Village_pump_(technical)/Archive_"
+namespace = "4"
+# Created 2004-09-14 22:30:26
+
+[VPP]
+short     = "VPP"
+name      = "Policy village pump"
+page      = "Village_pump_(policy)"
+archive   = "Village_pump_(policy)/Archive_"
+namespace = "4"
+# Created 2004-09-14 22:30:29
+
+[VPM]
+short     = "VPM"
+name      = "Miscellaneous village pump"
+page      = "Village_pump_(miscellaneous)"
+archive   = "Village_pump_(miscellaneous)/Archive_"
+namespace = "4"
+# Created 2004-09-25 05:37:37
+
+[VPIL]
+short     = "VPIL"
+name      = "Idea lab village pump"
+page      = "Village_pump_(idea lab)"
+archive   = "Village_pump_(idea lab)/Archive_"
+namespace = "4"
+# Created 2010-03-28 23:30:28
+
+[VPWMF]
+short     = "VPWMF"
+name      = "WMF village pump"
+page      = "Village_pump_(WMF)"
+archive   = "Village_pump_(WMF)/Archive_"
+namespace = "4"
+# Created 2016-03-04 11:20:13

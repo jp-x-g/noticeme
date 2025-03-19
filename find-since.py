@@ -5,8 +5,14 @@ import time
 import tomllib
 import requests
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import json
+from natsort import natsorted
+from dateutil.parser import parse
+import argparse
+
+# From this same project
+import first_revision
 
 print("Hi!")
 
@@ -24,8 +30,8 @@ data = Path(os.getcwd(), dataName)
 logfile = Path(data, logName)
 pages = Path(data, pagesName)
 
-data.mkdir(mode=0o777, exist_ok=True)
-pages.mkdir(mode=0o777, exist_ok=True)
+#data.mkdir(mode=0o777, exist_ok=True)
+#pages.mkdir(mode=0o777, exist_ok=True)
 
 ########################################
 # Utility functions.
@@ -46,9 +52,15 @@ def aLog(argument):
 
 # Get an array of all pages with a prefix.
 
-def getPrefixIndex(prefix="The", ns=0):
+def stripBeginning(string="", prefix=""):
+	if string.startswith(prefix):
+		return string[len(prefix):]
+	return string
+
+def getPrefixIndex(prefix="The", ns="0"):
 	#print(f"Prefix: '{prefix}', namespace: '{ns}'")
-	prefix = prefix.replace("Wikipedia:", "")
+	print(namespaces["number"][ns])
+	prefix = stripBeginning(prefix, f"{namespaces["number"][ns]}:")
 	prevpages = []
 	apcontinue = ""
 
@@ -63,18 +75,22 @@ def getPrefixIndex(prefix="The", ns=0):
 			"apcontinue" : apcontinue
 		})
 		#print(response.request.url)
-		print(f"Retrieving pages (so far: {len(prevpages)})")
 		data = response.json()
 		#print(data)
 		for page in data['query']['allpages']:
 			prevpages.append(page['title'])
 		if 'continue' in data:
+			print(f"Retrieving.........  {len(prevpages)}")
 			apcontinue = data['continue']['apcontinue']
-		else
+		else:
+			print(f"All pages retrieved: {len(prevpages)}")
 			return prevpages
 
 	# "batchcomplete":"","continue":{"apcontinue":"TheYouGeneration","continue":"-||"},
 	# {"batchcomplete":"","query":
+
+def measure_back_to(archives, date):
+	rev = first_revision.fetch(f"{spacename}:{arch}{page}")
 
 ########################################
 # Load boards from TOML
@@ -91,80 +107,101 @@ def load_boards():
 		print("Error: Invalid TOML format in boards.toml.")
 		sys.exit(1)
 
+def load_namespaces():
+	try:
+		with open("namespaces.toml", "rb") as file:
+			return tomllib.load(file)
+	except FileNotFoundError:
+		print("Error: namespaces.toml not found.")
+		sys.exit(1)
+	except tomllib.TOMLDecodeError:
+		print("Error: Invalid TOML format in namespaces.toml.")
+		sys.exit(1)
+
+
+
 ########################################
 # Okay, let's start.
 ########################################
+def find_since(date):
+	#print(boards)
 
-boards = load_boards()
-#print(boards)
-for board in boards.items():
-	print(board[1])
-#	print(board['short'])
-#	print(board['name'])
-#	print(board['page'])
-#	print(board['archive'])
+	#print(namespaces["number"]["108"])
 
-for board in boards.items():
-	archivePages = []
-	print(f"Processing {board[1]['name']}")
-	print(f"Namespace: {board[1]['namespace']}, archive prefix {board[1]['archive']}")
-	archivePages = getPrefixIndex(prefix=board[1]['archive'], ns=board[1]['namespace'])
-	#boardPath = Path(pages, board)
-	#boardPath.mkdir(mode=0o777, exist_ok=True)
-	print("asdf")
+	for board in boards.items():
+		print(board[1])
+	#	print(board['short'])
+	#	print(board['name'])
+	#	print(board['page'])
+	#	print(board['archive'])
 
-"""
+	for board in boards.items():
+		archivePages = []
+		pagesNumeric = []
+		# Because of extremely goofy legacy stuff from 2007, like "WP:ANI/Archives/U/User:"
+		arch         = board[1]['archive']
+		archSpace    = arch.replace("_", " ")
+		spacename    = f"{namespaces["number"][board[1]['namespace']]}"
+		print(f"{board[1]['name']} (archive prefix: {spacename}:{board[1]['archive']})")
+		# This actually hits the API a bunch of times.
+		archivePages = getPrefixIndex(prefix=board[1]['archive'], ns=board[1]['namespace'])
+		# archivePages.sort()
+		#for page in archivePages
+		#	print(page)
+		for page in natsorted(archivePages):
+			page = stripBeginning(page, f"{spacename}:{arch}")
+			page = stripBeginning(page, f"{spacename}:{archSpace}")
+			try:
+				int(page)
+				pagesNumeric.append(page)
+			except:
+				print(f"Non-numeric archive: {page}")
+			#print(page)
 
-	archiveNumber = 1
-	if details['name'] == "Wikipedia:Arbitration_Committee/Noticeboard":
-		archiveNumber = 0
+		pagesNumeric.reverse()
+		print(f"Numeric archives: {len(pagesNumeric)}, highest: {pagesNumeric[0]}")
 
-		"https://en.wikipedia.org/w/api.php?format=json&action=query&list=allpages&apprefix="
+		for page in pagesNumeric:
+			rev = first_revision.fetch(f"{spacename}:{arch}{page}")
+			print(rev)
 
 
 
-	while True:
-		query = "|".join(f"{details['archive']}{archiveNumber + i}" for i in range(batchSize))
-		archiveNumber += batchSize
-		print(query)
-		time.sleep(sleepTime)
+if __name__ == "__main__":
+	nao = datetime.now(timezone.utc).date()
+	nowstamp = nao.strftime("%Y-%m-%d %H:%M:%S")
 
-		#response = requests.get(httpApi, params={
-			#"action": "query",
-			#"prop": "revisions",
-			#"rvslots": "*",
-			#"rvprop": "content",
-			#"formatversion": "2",
-			#"format": "json",
-			#"titles": query
-		#})
+	parser = argparse.ArgumentParser(
+		description = "This program looks at all the boards listed in boards.toml, determines what number their archives go up to, and then determines their creation dates, going back from the current board to the date specified. After that, its behavior is specified by the output options.",
+		epilog      = ""
+	)
+	parser.add_argument(
+		"date",
+		help    = "Date (UTC) to fetch archives back to, inclusive of the date: you will get whatever archive was current as of that date. This does not require a particular format (although YYYY-MM-DD is best). Default is ereyesterday.",
+		default = (nao - timedelta(days=2))
+	)
+	parser.add_argument(
+		"--l",
+		"-list",
+		nargs   = "?",
+		const   = f"data/{nowstamp}.txt",
+		default = None,
+		help    = "Just list the archives, and don't bother retrieving them all. If you specify a path, the list will be saved there. Default is ./data/list YYYY-MM-DD HH:MM:SS.txt",
+	)
+	parser.add_argument(
+		"--s",
+		"-save",
+		nargs   = "?",
+		const   = f"data/{nowstamp}/",
+		default = None,
+		help    = "Downloads the wikitext of the archives, as plain text files, to specified path. Default is ./data/YYYY-MM-DD HH:MM:SS"
+	)
 
-		#data = response.json()
-		b#rokenYet = False
+	args = parser.parse_args()
 
-		for page in data.get("query", {}).get("pages", []):
-			if 'missing' in page:
-				brokenYet = True
-			else:
-				number = page['title'].split('Archive')[-1].strip().replace(" ", "").replace("_", "")
-				content = page['revisions'][0]['slots']['main']['content']
-				
-				pageJson = {
-					"board": board,
-					"archive": number,
-					"title": page['title'],
-					"pageid": page['pageid'],
-					"scrapedate": str(datetime.now(timezone.utc)),
-					"content": content
-				}
-				
-				pagePath = Path(boardPath, f"{board}-{number}")
-				with open(pagePath, 'w', encoding="utf-8") as pageFile:
-					json.dump(pageJson, pageFile, indent=2, ensure_ascii=False)
+	print(args)			
 
-		if brokenYet:
-			break
-		print("////////////")
+	boards = load_boards()
+	namespaces = load_namespaces()
 
-print("Bye!")
-"""
+	find_since(nao)
