@@ -36,16 +36,15 @@ def wikitext(page, namespace="0"):
 	
 	if response.status_code == 200:
 		data = response.json()
-		pages = data.get("query", {}).get("pages", {})
-		if pages:
-			for page_id, page_data in pages.items():
-				if "revisions" in page_data:
-				    return page_data["revisions"][0]["slots"]["main"]["content"]
-				else:
-					print("Could not retrieve page content.")
-					return page_data
-		else:
-			print("No pages returned in query.")
+		try:
+			pages = data["query"]["pages"]
+			try:
+				return pages["revisions"][0]["slots"]["main"]["content"]
+			except:
+				print("Could not retrieve page content.")
+				return data
+		except:
+			print("Could not get pages from query response.")
 			return data
 	else:
 		print("Could not get a response.")
@@ -58,4 +57,5 @@ if __name__ == "__main__":
 		sys.exit(1)
 
 	page = sys.argv[1]
-	wikitext(page)
+	text = wikitext(page)
+	print(text)

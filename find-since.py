@@ -177,9 +177,9 @@ def find_since(since):
 
 		# Now we assemble the list of all the pages that are actually since the date.
 
-		pagesSince.append(f"{board[1]['page']}") 
+		pagesSince.append(f"{spacename}:{board[1]['page']}") 
 		datesSince.append(f"{nowstamp}")
-		allPages.append([f"{board[1]['page']}", f"{nowstamp}", f"{board[1]['short']}"])
+		allPages.append([f"{spacename}:{board[1]['page']}", f"{nowstamp}", f"{board[1]['short']}-999999"])
 		# One-off handler for the current page
 
 		areWeDoneYet = False 
@@ -191,13 +191,17 @@ def find_since(since):
 			pagesSince.append(f"{spacename}:{arch}{page}")
 			datesSince.append(f"{revdate}")
 
-			allPages.append([f"{spacename}:{arch}{page}", f"{revdate}", f"{board[1]['short']}"])
+			allPages.append([f"{spacename}:{arch}{page}", f"{revdate}", f"{board[1]['short']}-{page}"])
 			if areWeDoneYet == True:
 				break
 			if revdate < since:
 				areWeDoneYet = True
 		#print(pagesSince)
 		#print(datesSince)
+
+	# Now it is time to look at the supplied args and decide what to do with this list.
+	# We might just save it and be done, or we might actually get wikitext for all of them.
+
 	if args.list is not None:
 		stringy = ""
 		for item in allPages:
@@ -207,12 +211,13 @@ def find_since(since):
 		exit()
 	if args.scrape is not None:
 		print(f"args.scrape is {args.scrape}")
-		scrapeDir = Path(os.getcwd(), dataName, args.scrape)
+		scrapeDir = Path(args.scrape)
 		scrapeDir.mkdir(mode=0o777, exist_ok=True)
 		count = 0
 		for item in allPages:
 			print(f"{count} of {len(allPages)}: getting wikitext for {item[0]}")
-			text = get_page.wikitext(item[0])
+			#text = get_page.wikitext(item[0])
+			text = "Hooma baroomba"
 			path = scrapeDir / f"{item[2]}"
 			write(text, path)
 		exit()
