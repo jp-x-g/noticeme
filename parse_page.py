@@ -32,7 +32,7 @@ def load_namespaces():
 
 def load_file(filename):
 	try:
-		with open(filename, "rb") as file:
+		with open(filename, "r", encoding="utf-8") as file:
 			return file.read()
 	except FileNotFoundError:
 		print(f"Error: {filename} not found.")
@@ -93,92 +93,101 @@ def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26")):
 
 	sections = []
 
-	for section in wikicode.get_sections(levels=[2]):
-		head = section.filter_headings()[0]
-		sect = section[len(head):]
-		head = head[2:-2].strip()
-		#print(head)
-		head = mwparserfromhell.utils.parse_anything(head)
-		#print(head)
-		head = head.strip_code()
-		print(head)
-		#print("Hoomba baroomba")
+	kludge = page
+	print(kludge.count("=="))
+	for garbage in ["=======", "======", "=====", "====", "==="]:
+		kludge = kludge.replace(garbage, "").replace(garbage, "")
+
+	for section in kludge.split("\n=="):
+		section = "\n==" + section
 		#print(section)
-		timestamps = re.findall(stampgex, sect)
-		talklinks  = [str(x) for x in section.filter_wikilinks() if "User talk:" in x]
-		userlinks  = [str(x) for x in section.filter_wikilinks() if "User:" in x]
-		distusers  = len(set(talklinks + userlinks))
-		stamps     = [parse(str(x.replace(" (UTC)", ""))).astimezone(timezone.utc).replace(tzinfo=None) for x in timestamps]
-		try:
-			firsttime  = min(stamps)
-		except:
-			print(stamps)			
-			firsttime  = parse("1970-01-01")
-		try:
-			lasttime   = max(stamps)
-		except:
-			print(stamps)
-			lasttime   = parse("1970-01-01")
-		print(f"Simple timestamp count: {sect.count(" (UTC)")} / regex count: {len(timestamps)}")
-		print(f"Simple usertalks count: {sect.count("[[User talk:")} / parse count: {len(talklinks)}")
-		print(f"Distinct users linked : {distusers}")
-		print(f"Timestamp range: {firsttime} to {lasttime}")
+#	for section in wikicode.get_sections(levels=[2]):
+		section = mwparserfromhell.utils.parse_anything(section)
+		if len(section.filter_headings()) > 0:
+			head = section.filter_headings()[0]
+			sect = section[len(head):]
+			head = head[2:-2].strip()
+			#print(head)
+			head = mwparserfromhell.utils.parse_anything(head)
+			#print(head)
+			head = head.strip_code()
+			print(head)
+			#print("Hoomba baroomba")
+			timestamps = re.findall(stampgex, sect)
+			talklinks  = [str(x) for x in section.filter_wikilinks() if "User talk:" in x]
+			userlinks  = [str(x) for x in section.filter_wikilinks() if "User:" in x]
+			distusers  = len(set(talklinks + userlinks))
+			stamps     = [parse(str(x.replace(" (UTC)", ""))).astimezone(timezone.utc).replace(tzinfo=None) for x in timestamps]
+			try:
+				firsttime  = min(stamps)
+			except:
+				print(stamps)			
+				firsttime  = parse("1970-01-01")
+			try:
+				lasttime   = max(stamps)
+			except:
+				print(stamps)
+				lasttime   = parse("1970-01-01")
+			print(f"Simple timestamp count: {sect.count(" (UTC)")} / regex count: {len(timestamps)}")
+			print(f"Simple usertalks count: {sect.count("[[User talk:")} / parse count: {len(talklinks)}")
+			print(f"Distinct users linked : {distusers}")
+			print(f"Timestamp range: {firsttime} to {lasttime}")
 
-		maxindent  = 1
-		while True:
-			if section.count(":"*maxindent) == 0:
-				break
-			maxindent += 1
-		print(f"Max indent level: {maxindent}")
+			maxindent  = 1
+			while True:
+				if section.count(":"*maxindent) == 0:
+					break
+				maxindent += 1
+			print(f"Max indent level: {maxindent}")
 
-#		sections.append({
-#			"head"      : head,
-#			"length"    : len(sect),
-#			"timestamps": len(timestamps),
-#			"userlinks" : len(userlinks),
-#			"usertalks" : len(talklinks),
-#			"distusers" : distusers,
-#		})
-		if lasttime > prunedate:
-			if (title is None) and (filename is not None):
-				sections.append({
-					"short"     : short,
-					"archive"   : f"{arch}",
-					"head"      : head,
-					"length"    : len(sect),
-					"timestamps": len(timestamps),
-					"userlinks" : len(userlinks),
-					"usertalks" : len(talklinks),
-					"distusers" : distusers,
-					"maxindent" : maxindent,
-					"firsttime" : f"{firsttime}",
-					"lasttime"  : f"{lasttime}"
-				})
-			else:
-				sections.append({
-					"short"     : "",
-					"archive"   : "",
-					"head"      : "",
-					"length"    : len(sect),
-					"timestamps": len(timestamps),
-					"userlinks" : len(userlinks),
-					"usertalks" : len(talklinks),
-					"distusers" : distusers,
-					"maxindent" : maxindent,
-					"firsttime" : f"{firsttime}",
-					"lasttime"  : f"{lasttime}"
-				})
+	#		sections.append({
+	#			"head"      : head,
+	#			"length"    : len(sect),
+	#			"timestamps": len(timestamps),
+	#			"userlinks" : len(userlinks),
+	#			"usertalks" : len(talklinks),
+	#			"distusers" : distusers,
+	#		})
+			if lasttime > prunedate:
+				if (title is None) and (filename is not None):
+					sections.append({
+						"short"     : short,
+						"archive"   : f"{arch}",
+						"head"      : head,
+						"length"    : len(sect),
+						"timestamps": len(timestamps),
+						"userlinks" : len(userlinks),
+						"usertalks" : len(talklinks),
+						"distusers" : distusers,
+						"maxindent" : maxindent,
+						"firsttime" : f"{firsttime}",
+						"lasttime"  : f"{lasttime}"
+					})
+				else:
+					sections.append({
+						"short"     : "",
+						"archive"   : "",
+						"head"      : "",
+						"length"    : len(sect),
+						"timestamps": len(timestamps),
+						"userlinks" : len(userlinks),
+						"usertalks" : len(talklinks),
+						"distusers" : distusers,
+						"maxindent" : maxindent,
+						"firsttime" : f"{firsttime}",
+						"lasttime"  : f"{lasttime}"
+					})
 
-#	return {
-#			"short"    : short,
-#			"name"     : boards[short]['name'],
-#			"page"     : boards[short]['page'],
-#			"archive"  : boards[short]['archive'],
-#			"namespace": boards[short]['namespace'],
-#			"title"    : f"{namespace}{pagename}",
-#			"archno"   : f"{arch}",
-#			"sections" : sections
-#	}
+	#	return {
+	#			"short"    : short,
+	#			"name"     : boards[short]['name'],
+	#			"page"     : boards[short]['page'],
+	#			"archive"  : boards[short]['archive'],
+	#			"namespace": boards[short]['namespace'],
+	#			"title"    : f"{namespace}{pagename}",
+	#			"archno"   : f"{arch}",
+	#			"sections" : sections
+	#	}
 	return sections
 
 	#print(wikicode.get_sections())
