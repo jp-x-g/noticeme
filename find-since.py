@@ -91,10 +91,10 @@ def getPrefixIndex(prefix="The", ns="0"):
 		for page in data['query']['allpages']:
 			prevpages.append(page['title'])
 		if 'continue' in data:
-			print(f"Retrieving.........  {len(prevpages)}")
+			print(f"Retrieving...............  {len(prevpages)}")
 			apcontinue = data['continue']['apcontinue']
 		else:
-			print(f"All pages retrieved: {len(prevpages)}")
+			print(f"All page titles retrieved: {len(prevpages)}")
 			return prevpages
 
 	# "batchcomplete":"","continue":{"apcontinue":"TheYouGeneration","continue":"-||"},
@@ -148,13 +148,19 @@ def find_since(since):
 	allPages = []
 
 	for board in boards.items():
+		# For each board, we get a PrefixIndex of all its archive pages,
+		# then go back from the highest number to find all relevant archives
+		# (those with first-revision dates that indicate relevant threads).
+
+		# We add these archive pages, and their metadata, to allPages.
+
 		archivePages = []
 		pagesNumeric = []
 		# We have to filter out goofy legacy stuff from 2007, like "WP:ANI/Archives/U/User:"
 		pagesSince   = []
 		datesSince   = []
 		arch         = board[1]['archive']
-		archSpace    = arch.replace("_", " ")
+		archSpaced   = arch.replace("_", " ")
 		spacename    = f"{namespaces["number"][board[1]['namespace']]}"
 		print(f"{board[1]['name']} (archive prefix: {spacename}:{board[1]['archive']})")
 		########################################
@@ -166,7 +172,7 @@ def find_since(since):
 		#	print(page)`
 		for page in natsorted(archivePages):
 			page = stripBeginning(page, f"{spacename}:{arch}")
-			page = stripBeginning(page, f"{spacename}:{archSpace}")
+			page = stripBeginning(page, f"{spacename}:{archSpaced}")
 			try:
 				int(page)
 				pagesNumeric.append(page)
@@ -214,9 +220,12 @@ def find_since(since):
 	if (args.scrape is not None) or (args.analyze is not None):
 		print(f"args.scrape is {args.scrape}")
 		print(f"args.analyze is {args.analyze}")
-		if (args.scrape is not None):
-			scrapeDir = Path(args.scrape)
-			scrapeDir.mkdir(mode=0o777, exist_ok=True)
+		if (args.scrape is None):
+			scrape = f"data/{nowstamp}/"
+		else:
+			scrape = args.scrape
+		scrapeDir = Path(scrape)
+		scrapeDir.mkdir(mode=0o777, exist_ok=True)
 		if (args.analyze is not None):
 			analyzed = []
 		count = 0
@@ -231,8 +240,8 @@ def find_since(since):
 			path = scrapeDir / f"{item[2]}"
 			if (args.scrape is not None):
 				write(path.with_suffix(".txt"), text)
-			if args.analyze is not None:
-				bolus = parse_page.parse_page(text, filename=f"{item[2]}", prunedate=since)
+			if (args.analyze is not None):
+				bolus = parse_page.parse_page(text, filename=f"{item[2]}", prunedate=since, minlength=minimum)
 				for bitem in bolus:
 					i = parse_page.get_info(f"{item[2]}")
 					short     = i['short']
@@ -249,7 +258,7 @@ def find_since(since):
 				analyzed += bolus
 
 	if args.analyze is not None:
-		write("data.JAYSON.json", json.dumps(analyzed, indent=2))
+		write(f"{args.analyze}.json", json.dumps(analyzed, indent=2))
 
 		tsv = "\t".join(analyzed[0].keys())
 		tsv += "\n"
@@ -258,7 +267,7 @@ def find_since(since):
 			tsv += "\n"
 
 		if (args.format == "tsv") or (args.format == "all"):
-			write("data/TASV.tsv", tsv)
+			write(f"{args.analyze}.tsv", tsv)
 
 		if (args.format == "wikitable") or (args.format == "all"):
 			wikitable = tsv_to_wikitable.convert(
@@ -272,7 +281,7 @@ def find_since(since):
 				rowattrs    = None,
 				altattrs    = None
 				)
-			write("data/wikitable.txt", wikitable)
+			write(f"{args.analyze}.txt", wikitable)
 
 
 	if args.format is not None:
@@ -281,7 +290,7 @@ def find_since(since):
 
 if __name__ == "__main__":
 	nao = datetime.now(timezone.utc).date()
-	nowstamp = nao.strftime("%Y-%m-%d %H:%M:%S")
+	nowstamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
 	boards = load_boards()
 	namespaces = load_namespaces()
@@ -327,17 +336,36 @@ if __name__ == "__main__":
 		default = "json",
 		help    = "Output format for wikitext analysis. Options are \"tsv\", \"json\", \"wikitable\" or \"all\"."
 	)
+
+	parser.add_argument(
+		"-m",
+		"--minimum",
+		default = "1",
+		help    = "Ignore all sections below this many bytes of content. Default is no restriction (e.g. 1)."
+	)
 	#help    = "Output format for wikitext analysis. Options are \"TSV\", \"wikitable\", or \"json\"."
 
 	args = parser.parse_args()
 
 	print("Arguments: ", args)
 
+	# Sanity checks for arguments, lest the program run for several minutes and THEN fail because of a typo
+	try:
+		minimum = int(args.minimum)
+		if minimum < 0:
+			raise ValueError("Minimum length must be positive")
+	except:
+		print(f"ERROR: couldn't parse minimum (\"{args.minimum}\").")
+		exit()
+
 	try:
 		since = parse(args.date).astimezone(timezone.utc).replace(tzinfo=None)
 		print(f"Parsed date: {since}")
 	except:
-		print("Couldn't parse date. Exiting.")
+		print(f"ERROR: couldn't parse date (\"{args.date}\").")
 		exit()
 
+	if args.format not in ["tsv", "json", "wikitable", "all"]:
+		print(f"ERROR: couldn't parse format (\"{args.format}\").")
+		exit()
 	find_since(since)

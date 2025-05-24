@@ -76,7 +76,7 @@ def get_info(filename):
 # Those are utility functions; this is the main logic.
 ############################################################
 
-def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26")):
+def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26"), minlength=1):
 	if (title is None) and (filename is not None):
 		i = get_info(filename)
 		short     = i['short']
@@ -96,7 +96,7 @@ def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26")):
 	kludge = page
 	print(kludge.count("=="))
 	for garbage in ["=======", "======", "=====", "====", "==="]:
-		kludge = kludge.replace(garbage, "").replace(garbage, "")
+		kludge = kludge.replace(garbage, "").replace(garbage, "").replace(garbage, "")
 
 	for section in kludge.split("\n=="):
 		section = "\n==" + section
@@ -148,7 +148,8 @@ def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26")):
 	#			"usertalks" : len(talklinks),
 	#			"distusers" : distusers,
 	#		})
-			if lasttime > prunedate:
+			if (lasttime > prunedate) and (len(sect) > minlength):
+			#if (lasttime > prunedate) and (len(sect) > 25000):
 				if (title is None) and (filename is not None):
 					sections.append({
 						"short"     : short,
