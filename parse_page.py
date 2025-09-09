@@ -76,7 +76,7 @@ def get_info(filename):
 # Those are utility functions; this is the main logic.
 ############################################################
 
-def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26"), minlength=1):
+def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26"), before=datetime.now(timezone.utc) + timedelta(days=1), minlength=1):
 	if (title is None) and (filename is not None):
 		i = get_info(filename)
 		short     = i['short']
@@ -148,7 +148,7 @@ def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26"), m
 	#			"usertalks" : len(talklinks),
 	#			"distusers" : distusers,
 	#		})
-			if (lasttime > prunedate) and (len(sect) > minlength):
+			if (before > lasttime) and (lasttime > prunedate) and (len(sect) > minlength):
 			#if (lasttime > prunedate) and (len(sect) > 25000):
 				if (title is None) and (filename is not None):
 					sections.append({

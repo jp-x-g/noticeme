@@ -1,5 +1,6 @@
 import requests
 import sys
+import version
 
 httpApi = "https://en.wikipedia.org/w/api.php"
 
@@ -32,7 +33,7 @@ def wikitext(page, namespace="0"):
 		"rvslots": "main",
 		"formatversion": "2"
 	}
-	response = requests.get(httpApi, params=params)
+	response = requests.get(httpApi, params=params, headers=version.headers())
 	if response.status_code == 200:
 		data = response.json()
 		#print(data)

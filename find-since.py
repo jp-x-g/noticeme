@@ -16,6 +16,7 @@ import first_revision
 import tsv_to_wikitable
 import get_page
 import parse_page
+import version
 
 print("Hi!")
 
@@ -84,7 +85,7 @@ def getPrefixIndex(prefix="The", ns="0"):
 			"aplimit"    : "500",
 			"apnamespace": ns,
 			"apcontinue" : apcontinue
-		})
+		}, headers=version.headers())
 		#print(response.request.url)
 		data = response.json()
 		#print(data)
@@ -134,7 +135,7 @@ def load_namespaces():
 ########################################
 # Okay, let's start.
 ########################################
-def find_since(since):
+def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")).astimezone(timezone.utc).replace(tzinfo=None)):
 	#print(boards)
 	#print(namespaces["number"]["108"])
 
@@ -241,7 +242,7 @@ def find_since(since):
 			if (args.scrape is not None):
 				write(path.with_suffix(".txt"), text)
 			if (args.analyze is not None):
-				bolus = parse_page.parse_page(text, filename=f"{item[2]}", prunedate=since, minlength=minimum)
+				bolus = parse_page.parse_page(text, filename=f"{item[2]}", prunedate=since, minlength=minimum, before=before)
 				for bitem in bolus:
 					i = parse_page.get_info(f"{item[2]}")
 					short     = i['short']
@@ -291,6 +292,7 @@ def find_since(since):
 if __name__ == "__main__":
 	nao = datetime.now(timezone.utc).date()
 	nowstamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+	tomstamp = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
 
 	boards = load_boards()
 	namespaces = load_namespaces()
@@ -341,7 +343,14 @@ if __name__ == "__main__":
 		"-m",
 		"--minimum",
 		default = "1",
-		help    = "Ignore all sections below this many bytes of content. Default is no restriction (e.g. 1)."
+		help    = "Ignore all sections below this many bytes of content. Optional. Default is no restriction (e.g. 1)."
+	)
+
+	parser.add_argument(
+		"-b",
+		"--before",
+		default = f"{tomstamp}",
+		help    = "Restrict to discussions before a certain date. Optional. Default is no restriction (e.g. tomorrow)."
 	)
 	#help    = "Output format for wikitext analysis. Options are \"TSV\", \"wikitable\", or \"json\"."
 
@@ -360,12 +369,20 @@ if __name__ == "__main__":
 
 	try:
 		since = parse(args.date).astimezone(timezone.utc).replace(tzinfo=None)
-		print(f"Parsed date: {since}")
+		print(f"Parsed after date : {since}")
 	except:
-		print(f"ERROR: couldn't parse date (\"{args.date}\").")
+		print(f"ERROR: couldn't parse after date (\"{args.date}\").")
+		exit()
+
+	try:
+		before = parse(args.before).astimezone(timezone.utc).replace(tzinfo=None)
+		print(f"Parsed before date: {before}")
+	except:
+		print(f"ERROR: couldn't parse before date (\"{args.before}\").")
 		exit()
 
 	if args.format not in ["tsv", "json", "wikitable", "all"]:
 		print(f"ERROR: couldn't parse format (\"{args.format}\").")
 		exit()
-	find_since(since)
+	find_since(since, before=before)
+

@@ -2,6 +2,7 @@ import requests
 import time
 import sys
 from datetime import datetime
+import version
 
 httpApi = "https://en.wikipedia.org/w/api.php"
 
@@ -24,7 +25,7 @@ def fetch(page, namespace="0"):
     if namespace != "0":
     	namespaces = load_namespaces()
     	page = f"{namespaces['number'][namespace]}:{page}"
-    print(f"Trying to fetch first revision for '{page}'.")
+    print(f"Fetching first revision for: {page}")
     params = {
         "action" : "query",
         "format" : "json",
@@ -34,16 +35,17 @@ def fetch(page, namespace="0"):
         "rvdir"  : "newer",
         "rvprop" : "timestamp"
     }
-    response = requests.get(httpApi, params=params)
+    response = requests.get(httpApi, params=params, headers=version.headers())
     
     if response.status_code == 200:
         data = response.json()
         pages = data.get("query", {}).get("pages", {})
         for page_id, page_data in pages.items():
             if "revisions" in page_data:
+                print(f"                             {page_data["revisions"][0]["timestamp"]}")
                 return page_data["revisions"][0]["timestamp"]
             else:
-            	print("Could not retrieve revisions from HTTP response.")
+            	print("                             Could not get revisions from HTTP response.")
             	return page_data
     return None
 
