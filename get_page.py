@@ -15,6 +15,18 @@ def load_namespaces():
 		print("Error: Invalid TOML format in namespaces.toml.")
 		sys.exit(1)
 
+def from_disk(path):
+	"""Retrieves wikitext from a path on disk."""
+	try:
+		with open(path, "rb") as file:
+			return file.read().decode("utf-8")
+	except FileNotFoundError:
+		print(f"Error: File not found at {path}.")
+		sys.exit(1)
+	except UnicodeDecodeError:
+		print(f"Error: Could not decode file {path} as UTF-8.")
+		sys.exit(1)
+
 def wikitext(page, namespace="0"):
 	"""Fetches the first revision timestamp for a given page.
 	Takes page name as single unnamed argument.
@@ -25,12 +37,12 @@ def wikitext(page, namespace="0"):
 		page = f"{namespaces['number'][namespace]}:{page}"
 	print(f"Fetching wikitext for '{page}'.")
 	params = {
-		"action" : "query",
-		"format" : "json",
-		"titles" : page,
-		"prop"   : "revisions",
-		"rvprop": "content",
-		"rvslots": "main",
+		"action"       : "query",
+		"format"       : "json",
+		"titles"       : page,
+		"prop"         : "revisions",
+		"rvprop"       : "content",
+		"rvslots"      : "main",
 		"formatversion": "2"
 	}
 	response = requests.get(httpApi, params=params, headers=version.headers())

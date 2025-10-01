@@ -10,34 +10,31 @@ import json
 from natsort import natsorted
 from dateutil.parser import parse
 import argparse
-import math
 
 # From this same project
 import first_revision
 import tsv_to_wikitable
 import get_page
 import parse_page
-import version
 
 print("Hi!")
 
 ########################################
 # Initialize some things.
 ########################################
-httpApi   = "https://en.wikipedia.org/w/api.php"
+httpApi = "https://en.wikipedia.org/w/api.php"
 sleepTime = 0.01
 batchSize = 10
-dataName  = "data"
+dataName = "data"
 pagesName = "pages"
-logName   = "log.txt"
+logName = "log.txt"
 
-data      = Path(os.getcwd(), dataName)
-logfile   = Path(data, logName)
-pages     = Path(data, pagesName)
+data = Path(os.getcwd(), dataName)
+logfile = Path(data, logName)
+pages = Path(data, pagesName)
 
 data.mkdir(mode=0o777, exist_ok=True)
-logfile.mkdir(mode=0o777, exist_ok=True)
-pages.mkdir(mode=0o777, exist_ok=True)
+#pages.mkdir(mode=0o777, exist_ok=True)
 
 ########################################
 # Utility functions.
@@ -87,15 +84,16 @@ def getPrefixIndex(prefix="The", ns="0"):
 			"aplimit"    : "500",
 			"apnamespace": ns,
 			"apcontinue" : apcontinue
-		}, headers=version.headers())
-		#print(response.request.url)
-		data = response.json()
-		#print(data)
-		for page in data['query']['allpages']:
+		})
+		print(response.request.url)
+		print(response)
+		respdata = response.json()
+		print(respdata)
+		for page in respdata['query']['allpages']:
 			prevpages.append(page['title'])
-		if 'continue' in data:
+		if 'continue' in respdata:
 			print(f"Retrieving...............  {len(prevpages)}")
-			apcontinue = data['continue']['apcontinue']
+			apcontinue = respdata['continue']['apcontinue']
 		else:
 			print(f"All page titles retrieved: {len(prevpages)}")
 			return prevpages
@@ -105,11 +103,6 @@ def getPrefixIndex(prefix="The", ns="0"):
 
 def measure_back_to(archives, date):
 	rev = first_revision.fetch(f"{spacename}:{arch}{page}")
-
-def pad(string, width=5):
-	a = " " * width
-	string = str(string) + a
-	return string[0:width]
 
 ########################################
 # Load boards from TOML
@@ -137,6 +130,8 @@ def load_namespaces():
 		print("Error: Invalid TOML format in namespaces.toml.")
 		sys.exit(1)
 
+
+
 ########################################
 # Okay, let's start.
 ########################################
@@ -146,15 +141,12 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 
 	for board in boards.items():
 		print(board[1])
-		pagePath = Path(pages, board[1]['short'])
-		pagePath.mkdir(mode=0o777, exist_ok=True)
 	#	print(board['short'])
 	#	print(board['name'])
 	#	print(board['page'])
 	#	print(board['archive'])
 
 	allPages = []
-	metrics  = {}
 
 	for board in boards.items():
 		# For each board, we get a PrefixIndex of all its archive pages,
@@ -198,7 +190,6 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 		pagesSince.append(f"{spacename}:{board[1]['page']}") 
 		datesSince.append(f"{nowstamp}")
 		allPages.append([f"{spacename}:{board[1]['page']}", f"{nowstamp}", f"{board[1]['short']}-999999"])
-		metrics[board[1]['short']] = 0
 		# One-off handler for the current page
 
 		for page in pagesNumeric:
@@ -208,23 +199,24 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 			########################################
 			# 2025-02-23T12:00:37Z
 			revdate = parse(rev).astimezone(timezone.utc).replace(tzinfo=None)
-			pagesSince.append(f"{spacename}:{arch}{page}")
-			datesSince.append(f"{revdate}")
-			allPages.append([f"{spacename}:{arch}{page}", f"{revdate}", f"{board[1]['short']}-{page}"])
+			if revdate < before:
+				pagesSince.append(f"{spacename}:{arch}{page}")
+				datesSince.append(f"{revdate}")
+				allPages.append([f"{spacename}:{arch}{page}", f"{revdate}", f"{board[1]['short']}-{page}"])
 
 			if revdate < since:
 				break
+			# An archive will contain threads from well after its first revision.
+			# This means that e.g. threads from July 4 can be on an archive with
+			# a first revision of July 1, or June 5, or May 12, or January 7.
+			# However, at most we will be dealing with one archive prior to the date.
+
 		#print(pagesSince)
 		#print(datesSince)
 
-	# We have now successfully retrieved the list of all the archive page titles
-	# for all the boards we want to look at.
-
-	# Now it is time to look at the supplied args and decide what to do with that list.
+	# Now it is time to look at the supplied args and decide what to do with this list.
 	# We might just save it and be done, or we might actually get wikitext for all of them.
 
-	# It will look something like this:
-	#  
 	if args.list is not None:
 		stringy = ""
 		for item in allPages:
@@ -235,45 +227,26 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 	if (args.scrape is not None) or (args.analyze is not None):
 		print(f"args.scrape is {args.scrape}")
 		print(f"args.analyze is {args.analyze}")
-		# This was goofy: they should just scrape to the per-board folders.
-		# Commenting it out since those are created now. -2025-09-30
-		# if (args.scrape is None):
-		# 	scrape = f"data/{nowstamp}/"
-		# else:
-		# 	scrape = args.scrape
-		# scrapeDir = Path(scrape)
-		# scrapeDir.mkdir(mode=0o777, exist_ok=True)
+		if (args.scrape is None):
+			scrape = f"data/{nowstamp}/"
+		else:
+			scrape = args.scrape
+		scrapeDir = Path(scrape)
+		scrapeDir.mkdir(mode=0o777, exist_ok=True)
 		if (args.analyze is not None):
 			analyzed = []
 		count = 0
-
-		w = math.ceil(math.log(len(allPages)+1, 10))
-		# Number of digits needed to display the whole number
-		# 2 is 1, 69 is 2, 420 is 3, 1984 is 4
-
 		for item in allPages:
-			# ["Wikipedia:Administrators'_noticeboard", '2025-10-01 09:37:28', 'AN-999999']
 			count += 1
-			shortname = item[2].split("-")[0]
-			filepath = Path(pages, shortname, item[2] + ".txt")
+			print(f"{count} of {len(allPages)}: getting wikitext for {item[0]}")
 			#text = "Hooma baroomba"
-
+			########################################
+			text = get_page.wikitext(item[0])
+			# Wowzers! This hits the API!
+			########################################
+			path = scrapeDir / f"{item[2]}"
 			if (args.scrape is not None):
-				print(f"{pad(count, w)} of {pad(len(allPages), w)}: getting wikitext for {item[0]}")
-				########################################
-				text = get_page.wikitext(item[0])
-				# Wowzers! This hits the API!
-				########################################
-				write(filepath, text)
-			else:
-				# Try to retrieve page from disk, if it doesn't work, fetch it.
-				print(f"{pad(count, w)} of {pad(len(allPages), w)}: reading diskfile for {item[0]}")
-				try:
-					text = get_page.from_disk(str(filepath))
-				except:
-					print(f"Didn't work: fetching from server.")
-					text = get_page.wikitext(item[0])
-					write(filepath, text)
+				write(path.with_suffix(".txt"), text)
 			if (args.analyze is not None):
 				bolus = parse_page.parse_page(text, filename=f"{item[2]}", prunedate=since, minlength=minimum, before=before)
 				for bitem in bolus:
@@ -288,15 +261,8 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 
 					if bitem['archive'] == "999999":
 						bitem['archive'] = "Current"
-					try:
-						metrics[i['short']] += 1
-					except:
-						print("Couldn't increment metrics.")
 
 				analyzed += bolus
-		for key in metrics:
-			print(f"{pad(key, 10)}: {metrics[key]}")
-
 
 	if args.analyze is not None:
 		write(f"{args.analyze}.json", json.dumps(analyzed, indent=2))
@@ -360,7 +326,7 @@ if __name__ == "__main__":
 		nargs   = "?",
 		const   = f"data/{nowstamp}/",
 		default = None,
-		help    = "Freshly downloads the wikitext of the archive pages, as plain text files, to /data/pages/. Default is to try reading them from disk."
+		help    = "Downloads the wikitext of the archives, as plain text files, to specified path. Default is: ./data/YYYY-MM-DD HH:MM:SS/"
 	)
 
 	parser.add_argument(
@@ -369,7 +335,7 @@ if __name__ == "__main__":
 		nargs   = "?",
 		const   = f"data/{nowstamp} analyze",
 		default = None,
-		help    = "Analyzes the wikitext, from the scrape directory, and writes a report to specified path. Default is: ./data/YYYY-MM-DD HH:MM:SS analyze(file extension)"
+		help    = "Downloads the wikitext of the archives, analyzes the wikitext, and writes a report to specified path. Default is: ./data/YYYY-MM-DD HH:MM:SS analyze(file extension)"
 	)
 
 	parser.add_argument(

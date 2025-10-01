@@ -62,7 +62,7 @@ def get_info(filename):
 			pagename = f"{boards[short]['page']}"
 		else:
 			pagename  = f"{boards[short]['archive']}{arch}"
-		print(f"{namespace}{pagename}")
+		# print(f"{namespace}{pagename}")
 	except:
 		pagename = filename
 	return {
@@ -76,7 +76,7 @@ def get_info(filename):
 # Those are utility functions; this is the main logic.
 ############################################################
 
-def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26"), before=datetime.now(timezone.utc) + timedelta(days=1), minlength=1):
+def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26"), before=datetime.now(timezone.utc) + timedelta(days=1), minlength=1, verbose=False):
 	if (title is None) and (filename is not None):
 		i = get_info(filename)
 		short     = i['short']
@@ -111,7 +111,8 @@ def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26"), b
 			head = mwparserfromhell.utils.parse_anything(head)
 			#print(head)
 			head = head.strip_code()
-			print(head)
+			if verbose == True:
+				print(head)
 			#print("Hoomba baroomba")
 			timestamps = re.findall(stampgex, sect)
 			talklinks  = [str(x) for x in section.filter_wikilinks() if "User talk:" in x]
@@ -121,24 +122,21 @@ def parse_page(page, title=None, filename=None, prunedate=parse("1991-12-26"), b
 			try:
 				firsttime  = min(stamps)
 			except:
-				print(stamps)			
+				print(f"Timestamp parsing error: {stamps}")			
 				firsttime  = parse("1970-01-01")
 			try:
 				lasttime   = max(stamps)
 			except:
-				print(stamps)
+				print(f"Timestamp parsing error: {stamps}")		
 				lasttime   = parse("1970-01-01")
-			print(f"Simple timestamp count: {sect.count(" (UTC)")} / regex count: {len(timestamps)}")
-			print(f"Simple usertalks count: {sect.count("[[User talk:")} / parse count: {len(talklinks)}")
-			print(f"Distinct users linked : {distusers}")
-			print(f"Timestamp range: {firsttime} to {lasttime}")
-
+			
 			maxindent  = 1
 			while True:
 				if section.count(":"*maxindent) == 0:
 					break
 				maxindent += 1
-			print(f"Max indent level: {maxindent}")
+			if verbose == True:
+				print(f"sts: {sect.count(" (UTC)")} / rgx: {len(timestamps)} / utk: {sect.count("[[User talk:")} / parse: {len(talklinks)} / users: {distusers} / range: {firsttime} to {lasttime} / indent: {maxindent}")
 
 	#		sections.append({
 	#			"head"      : head,
