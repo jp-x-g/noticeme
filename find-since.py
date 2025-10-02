@@ -11,7 +11,6 @@ from natsort import natsorted
 from dateutil.parser import parse
 import argparse
 import math
-
 # From this same project
 import first_revision
 import tsv_to_wikitable
@@ -38,6 +37,8 @@ pages     = Path(data, pagesName)
 data.mkdir(mode=0o777, exist_ok=True)
 logfile.mkdir(mode=0o777, exist_ok=True)
 pages.mkdir(mode=0o777, exist_ok=True)
+
+t=[time.perf_counter()]
 
 ########################################
 # Utility functions.
@@ -111,6 +112,11 @@ def pad(string, width=5):
 	string = str(string) + a
 	return string[0:width]
 
+def tick(verbose=False):
+	if verbose:
+		print(f"⏳{time.perf_counter()-t[0]:.3f}s")
+	t[0]=time.perf_counter()
+
 ########################################
 # Load boards from TOML
 ########################################
@@ -141,6 +147,7 @@ def load_namespaces():
 # Okay, let's start.
 ########################################
 def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")).astimezone(timezone.utc).replace(tzinfo=None)):
+	v = False
 	#print(boards)
 	#print(namespaces["number"]["108"])
 
@@ -155,6 +162,7 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 
 	allPages = []
 	metrics  = {}
+	tick(v)
 
 	for board in boards.items():
 		# For each board, we get a PrefixIndex of all its archive pages,
@@ -192,6 +200,7 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 
 		pagesNumeric.reverse()
 		print(f"Numeric archives: {len(pagesNumeric)}, highest: {pagesNumeric[0]}")
+		tick(v)
 
 		# Now we assemble the list of all the pages that are actually since the date.
 
@@ -214,6 +223,7 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 
 			if revdate < since:
 				break
+		tick(v)
 		#print(pagesSince)
 		#print(datesSince)
 
@@ -250,7 +260,7 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 		w = math.ceil(math.log(len(allPages)+1, 10))
 		# Number of digits needed to display the whole number
 		# 2 is 1, 69 is 2, 420 is 3, 1984 is 4
-
+		tick(v)
 		for item in allPages:
 			# ["Wikipedia:Administrators'_noticeboard", '2025-10-01 09:37:28', 'AN-999999']
 			count += 1
@@ -262,6 +272,7 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 				print(f"{pad(count, w)} of {pad(len(allPages), w)}: getting wikitext for {item[0]}")
 				########################################
 				text = get_page.wikitext(item[0])
+				tick()
 				# Wowzers! This hits the API!
 				########################################
 				write(filepath, text)
@@ -270,9 +281,11 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 				print(f"{pad(count, w)} of {pad(len(allPages), w)}: reading diskfile for {item[0]}")
 				try:
 					text = get_page.from_disk(str(filepath))
+					tick()
 				except:
 					print(f"Didn't work: fetching from server.")
 					text = get_page.wikitext(item[0])
+					tick()
 					write(filepath, text)
 			if (args.analyze is not None):
 				bolus = parse_page.parse_page(text, filename=f"{item[2]}", prunedate=since, minlength=minimum, before=before)
@@ -292,10 +305,13 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 						metrics[i['short']] += 1
 					except:
 						print("Couldn't increment metrics.")
-
+				tick(v)
 				analyzed += bolus
+		i = 0
 		for key in metrics:
 			print(f"{pad(key, 10)}: {metrics[key]}")
+			i += int(metrics[key])
+		print(f"{pad("Total", 10)}: {i}")
 
 
 	if args.analyze is not None:
