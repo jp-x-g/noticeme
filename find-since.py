@@ -17,6 +17,7 @@ import tsv_to_wikitable
 import get_page
 import parse_page
 import version
+import load_cfg
 
 print("Hi!")
 
@@ -29,6 +30,11 @@ batchSize = 10
 dataName  = "data"
 pagesName = "pages"
 logName   = "log.txt"
+cfgName   = "cfg"
+
+cfg       = Path(os.getcwd(), cfgName)
+boardPath = Path(cfg, "boards.toml")
+namesPath = Path(cfg, "namespaces.toml")
 
 data      = Path(os.getcwd(), dataName)
 logfile   = Path(data, logName)
@@ -116,32 +122,6 @@ def tick(verbose=False):
 	if verbose:
 		print(f"⏳{time.perf_counter()-t[0]:.3f}s")
 	t[0]=time.perf_counter()
-
-########################################
-# Load boards from TOML
-########################################
-
-def load_boards():
-	try:
-		with open("boards.toml", "rb") as file:
-			return tomllib.load(file)
-	except FileNotFoundError:
-		print("Error: boards.toml not found.")
-		sys.exit(1)
-	except tomllib.TOMLDecodeError:
-		print("Error: Invalid TOML format in boards.toml.")
-		sys.exit(1)
-
-def load_namespaces():
-	try:
-		with open("namespaces.toml", "rb") as file:
-			return tomllib.load(file)
-	except FileNotFoundError:
-		print("Error: namespaces.toml not found.")
-		sys.exit(1)
-	except tomllib.TOMLDecodeError:
-		print("Error: Invalid TOML format in namespaces.toml.")
-		sys.exit(1)
 
 ########################################
 # Okay, let's start.
@@ -350,8 +330,8 @@ if __name__ == "__main__":
 	nowstamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 	tomstamp = (datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
 
-	boards = load_boards()
-	namespaces = load_namespaces()
+	boards = load_cfg.boards()
+	namespaces = load_cfg.namespaces()
 
 	parser = argparse.ArgumentParser(
 		description = "This program looks at all the boards listed in boards.toml, determines what number their archives go up to, and then determines their creation dates, going back from the current board to the date specified. After that, its behavior is specified by the output options.",

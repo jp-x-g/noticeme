@@ -7,51 +7,19 @@ import re
 import time
 from datetime import datetime, timezone, timedelta
 from dateutil.parser import parse
-
-def load_boards():
-	try:
-		with open("boards.toml", "rb") as file:
-			return tomllib.load(file)
-	except FileNotFoundError:
-		print("Error: boards.toml not found.")
-		sys.exit(1)
-	except tomllib.TOMLDecodeError:
-		print("Error: Invalid TOML format in boards.toml.")
-		sys.exit(1)
-
-def load_namespaces():
-	try:
-		with open("namespaces.toml", "rb") as file:
-			return tomllib.load(file)
-	except FileNotFoundError:
-		print("Error: namespaces.toml not found.")
-		sys.exit(1)
-	except tomllib.TOMLDecodeError:
-		print("Error: Invalid TOML format in namespaces.toml.")
-		sys.exit(1)
-
-def load_file(filename):
-	try:
-		with open(filename, "r", encoding="utf-8") as file:
-			return file.read()
-	except FileNotFoundError:
-		print(f"Error: {filename} not found.")
-		sys.exit(1)
-	except:
-		print(f"Error: Could not process {filename}.")
-		sys.exit(1)
-
+# From this project
+import load_cfg
 
 def get_info(filename):
 	try:
-		boards    = load_boards();
+		boards    = load_cfg.boards();
 		# {'short'    : 'AE',
 		#  'name'     : 'Arbitration enforcement',
 		#  'page'     : 'Arbitration/Requests/Enforcement',
 		#  'archive'  : 'Arbitration/Requests/Enforcement/Archive',
 		#  'namespace': '4'
 		# }
-		nses      = load_namespaces();
+		nses      = load_cfg.namespaces();
 		short     = filename.split("/")[-1:][0].split("-")[0]
 		arch      = filename.split("/")[-1:][0].split("-")[1].replace(".txt", "")
 		#print(board)
@@ -64,6 +32,7 @@ def get_info(filename):
 			pagename  = f"{boards[short]['archive']}{arch}"
 		# print(f"{namespace}{pagename}")
 	except:
+		print(f"Error: Could not get info for {filename}.")
 		pagename = filename
 	return {
 		"short"    : short,
@@ -201,7 +170,7 @@ if __name__ == "__main__":
 		print("Usage: python3 get_page.py pagename")
 		sys.exit(1)
 
-	page = load_file(sys.argv[1])
+	page = load_cfg.file(sys.argv[1])
 
 	text = parse_page(page, filename=sys.argv[1])
 	print(text)

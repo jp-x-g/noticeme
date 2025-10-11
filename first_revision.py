@@ -3,19 +3,10 @@ import time
 import sys
 from datetime import datetime
 import version
+# From this project
+import load_cfg
 
 httpApi = "https://en.wikipedia.org/w/api.php"
-
-def load_namespaces():
-	try:
-		with open("namespaces.toml", "rb") as file:
-			return tomllib.load(file)
-	except FileNotFoundError:
-		print("Error: namespaces.toml not found.")
-		sys.exit(1)
-	except tomllib.TOMLDecodeError:
-		print("Error: Invalid TOML format in namespaces.toml.")
-		sys.exit(1)
 
 def fetch(page, namespace="0"):
     """Fetches the first revision timestamp for a given page.
@@ -23,7 +14,7 @@ def fetch(page, namespace="0"):
     Optionally, you can give a 'namespace' arg with its number."""
     namespace = str(namespace)
     if namespace != "0":
-    	namespaces = load_namespaces()
+    	namespaces = load_cfg.namespaces()
     	page = f"{namespaces['number'][namespace]}:{page}"
     print(f"Fetching first revision for: {page}")
     params = {

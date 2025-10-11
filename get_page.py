@@ -4,9 +4,9 @@ import version
 
 httpApi = "https://en.wikipedia.org/w/api.php"
 
-def load_namespaces():
+def load_namespaces(path="cfg/namespaces.toml"):
 	try:
-		with open("namespaces.toml", "rb") as file:
+		with open(f"{path}", "rb") as file:
 			return tomllib.load(file)
 	except FileNotFoundError:
 		print("Error: namespaces.toml not found.")
