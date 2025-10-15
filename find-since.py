@@ -5,6 +5,7 @@ import time
 import tomllib
 import requests
 from pathlib import Path
+from tomlkit import dumps
 from datetime import datetime, timezone, timedelta
 import json
 from natsort import natsorted
@@ -29,17 +30,19 @@ sleepTime = 0.01
 batchSize = 10
 dataName  = "data"
 pagesName = "pages"
-logName   = "log.txt"
 cfgName   = "cfg"
+logName   = "log.txt"
 
 cfg       = Path(os.getcwd(), cfgName)
 boardPath = Path(cfg, "boards.toml")
 namesPath = Path(cfg, "namespaces.toml")
+revsPath  = Path(cfg, "revisions.toml")
 
 data      = Path(os.getcwd(), dataName)
 logfile   = Path(data, logName)
 pages     = Path(data, pagesName)
 
+cfg.mkdir(mode=0o777, exist_ok=True)
 data.mkdir(mode=0o777, exist_ok=True)
 logfile.mkdir(mode=0o777, exist_ok=True)
 pages.mkdir(mode=0o777, exist_ok=True)
@@ -131,6 +134,24 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 	#print(boards)
 	#print(namespaces["number"]["108"])
 
+
+	#### Setting up the first-revision index
+
+	if revsPath.exists():
+		try:
+			revs = load_cfg.toml(revsPath)
+		except:
+			try:
+				revsTest = load_cfg.file(revsPath)
+			except:
+				revs = {}
+			print(f"Revision database is corrupt.")
+			print(f"Either fix {revsPath} or delete it, and then run again.")
+			sys.exit(1)
+	else:
+		print(f"Nothing exists at {revsPath}. It will be set up with this run.")
+		revs = {}
+
 	for board in boards.items():
 		print(board[1])
 		pagePath = Path(pages, board[1]['short'])
@@ -192,7 +213,11 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 
 		for page in pagesNumeric:
 			########################################
-			rev = first_revision.fetch(f"{spacename}:{arch}{page}")
+			try:
+				rev = revs[f"{spacename}:{arch}{page}"]
+			except:
+				rev = first_revision.fetch(f"{spacename}:{arch}{page}")
+				revs[f"{spacename}:{arch}{page}"] = rev
 			# Wowzers! This hits the API.
 			########################################
 			# 2025-02-23T12:00:37Z
@@ -204,8 +229,16 @@ def find_since(since, before=parse((datetime.now(timezone.utc) + timedelta(days=
 			if revdate < since:
 				break
 		tick(v)
+
 		#print(pagesSince)
 		#print(datesSince)
+	# First of all, let's save the list of first-revisions, so we don't have to
+	# shake them all out of the API next time.
+	try:
+		revsPath.write_text(dumps(revs), encoding="utf-8")
+		print(f"Saved first-revision index to {revsPath}")
+	except:
+		print(f"Error: Couldn't save first-revision index to {revsPath}")
 
 	# We have now successfully retrieved the list of all the archive page titles
 	# for all the boards we want to look at.
